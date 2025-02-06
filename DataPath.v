@@ -176,21 +176,22 @@ module datapath_tb();
 		@(posedge clk)
 		//---------Preset R3----------//
 		
-		load_reg(4'd3, 32'h22); 
+		load_reg(4'd2, 32'h100); 
 		
 		//---------Preset R7----------//
 
-		load_reg(4'd7, 32'h24);
+		load_reg(4'd6, 32'h40);
 	
 	
 		//---------AND R4, R3, R7---------//
 		
 		T0 ();
-		T1 (32'h2A2B8000);
+		T1 (32'h7930_0000);
 		T2 ();
-		T3 (4'd3);
-		T4 (4'd7, `AND);
-		T5 (4'd4, 1'b0); // No HILO
+		T3 (4'd2);
+		T4 (4'd6, `DIV);
+		T5 (4'd0, 1'b1); //HILO
+		T6 ();
 		
 		@(posedge clk)
 		$stop;
@@ -249,7 +250,11 @@ module datapath_tb();
 	task T4 (input [3:0] reg_id, input [3:0] opp);
 		begin
 			GRout[reg_id] <= 1; ALUopp[opp] <= 1; DPin[`Z] <= 1; // Z <- [Y] opp [GR[reg_id]]
-			
+			if (opp == `DIV) begin 
+				repeat (34) begin
+					@(posedge clk);
+				end
+			end
 			@(posedge clk)
 			GRout[reg_id] <= 0; ALUopp[opp] <= 0; DPin[`Z] <= 0;
 		end
