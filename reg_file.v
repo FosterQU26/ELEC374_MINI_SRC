@@ -1,8 +1,16 @@
 
-// Modular 2^depth x width register file with 2 read ports and 1 write port.
-// Read port 1 accesses r_data1 according to address r_addr1.
-// Read port 2 accesses r_data2 according to address r_addr2.
-// The single write port writes w_data to address w_addr.
+/* 
+	Modular 2^depth x width register file with 2 read ports and 1 write port.
+	Read port 1 accesses r_data1 according to address r_addr1.
+	Read port 2 accesses r_data2 according to address r_addr2.
+	The single write port writes w_data to address w_addr.
+*/
+
+/*
+	DESIGN DECISION: 
+	An internal register array was chosen rather than instatiating 16 register.v entities,
+	since register arrays are implemented using on-board FPGA memory, rather than costly FFs.
+*/
 
 module reg_file #(
 	// for modularity
@@ -27,10 +35,8 @@ module reg_file #(
 	end
 	endgenerate
 	
-	//Suport for a initilize file 
-	//initial $readmemh("mem_init.txt", reg_array);
-	
 	// r_data1/2 are immediately available as r_addr1/2 is presented to the RF
+	// Two read addresses are supported by the register file should we choose to implement a 3-bus design in later phases.
 	assign r_data1 = reg_array[r_addr1];
 	assign r_data2 = reg_array[r_addr2];
 	
