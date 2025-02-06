@@ -25,11 +25,13 @@ radix define reg_ids {
     32      "INPORT"
     64      "OUTPORT"
     128     "Z"
+    136     "Z & MAR"
     256     "ZHI"
     512     "ZLO"
     1024    "HI"
     2048    "LO"
     4096    "READ"
-    4112    "READ_MDR"  ;# 4096 (READ) | 16 (MDR) = 4112
+    4112    "READ & MDR"  ;# 4096 (READ) | 16 (MDR) = 4112
+    4113    "READ & MDR & PC"
     default "UNKNOWN"
 }
