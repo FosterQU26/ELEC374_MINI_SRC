@@ -176,22 +176,22 @@ module datapath_tb();
 		@(posedge clk)
 		//---------Preset R3----------//
 		
-		load_reg(4'd2, 32'h100); 
+		load_reg(4'd3, {32'h0111}); 
 		
 		//---------Preset R7----------//
 
-		load_reg(4'd6, 32'h40);
+		load_reg(4'd7, {32'd1});
 	
 	
 		//---------AND R4, R3, R7---------//
 		
 		T0 ();
-		T1 (32'h7930_0000);
+		T1 (32'h1A1B8000);
 		T2 ();
-		T3 (4'd2);
-		T4 (4'd6, `DIV);
-		T5 (4'd0, 1'b1); //HILO
-		T6 ();
+		T3 (4'd3);
+		T4 (4'd7, `ROR);
+		T5 (4'd4, 1'b0); //HILO
+		//T6 ();
 		
 		@(posedge clk)
 		$stop;

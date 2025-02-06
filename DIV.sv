@@ -15,7 +15,8 @@ module DIV(
 );
    reg [63:0] AQ_reg;
    integer count;	 
-
+	wire [31:0] M_signed = (M[31]) ? -M : M; 
+		
 	always @(posedge clk) begin
 		
 		if (~resetn) begin
@@ -41,13 +42,13 @@ module DIV(
 			
 			if (AQ_reg[63] == 1'b0) begin
 			
-				AQ_reg[63:32] = AQ_reg[63:32] - M;
+				AQ_reg[63:32] = AQ_reg[63:32] - M_signed;
 			
 			end
 			
 			else begin
 			
-				AQ_reg[63:32] = AQ_reg[63:32] + M;
+				AQ_reg[63:32] = AQ_reg[63:32] + M_signed;
 			
 			end
 			
@@ -57,15 +58,17 @@ module DIV(
 		
 		else if (AQ_reg[63] == 1) begin
 		
-			AQ_reg[63:32] = AQ_reg[63:32] + M;
+			AQ_reg[63:32] = AQ_reg[63:32] + M_signed;
 			
 		end
 		
 	end
 
+ 	
 	
-   assign quotient = AQ_reg[31:0];
-   assign remainder = AQ_reg[63:32];	
+   assign quotient =  (M[31]) ? -AQ_reg[31:0] : AQ_reg[31:0];
+	
+   assign remainder =	AQ_reg[63:32];
 
 endmodule
 
