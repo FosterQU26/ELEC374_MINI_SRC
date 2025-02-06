@@ -1,12 +1,24 @@
+/*
+	CSA_tree_16to2 is a 16-to-2 reducer for 64-bit operands, using 3-to-2 sum-carry reducers.
+	It is used to add the 16 augends produced from the Booth bit-pair recoding process for 32-bit multiplication.
+*/
 
+// This module needed to be .sv to accept a 16-word wire vector.
 
 module CSA_tree_16to2 (augends, reduced1, reduced2);
 	
+	// 16-word wire vector holding the bit-pair recoding augends.
 	input [63:0] augends [15:0];
+	
+	// Final two operands.
 	output [63:0] reduced1, reduced2;
 	
+	// Wire vectors for sum and carry results from each CSA stage.
 	wire [63:0] stage1_sum [4:0];
 	wire [63:0] stage1_carry [4:0];
+	
+	
+	// SEE REPORT FOR 16-to-2 REDUCER TREE LAYOUT.
 	
 	genvar i;
 	generate
@@ -44,6 +56,7 @@ module CSA_tree_16to2 (augends, reduced1, reduced2);
 endmodule
 
 
+// 3-to-2 Sum-Carry Reducer 
 module reducer3to2 (
 	input [63:0] x, y, z,
 	output [63:0] s,

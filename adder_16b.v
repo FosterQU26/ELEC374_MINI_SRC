@@ -1,11 +1,15 @@
 /*-------------------Top-Level-------------------*/
 
-// 16-bit adder with 4 CLA_4b instances.
+/* 
+	16-bit adder with 4 CLA_4b instances. This module does not incorporate a carry-out signal, given that it is solely used in 
+	Carry-lookahead adders of higher degree of hierarchy. This also warrants the need of 2nd order propagate/generate signals as outputs.
+*/
+
 module adder_16b (
-	input cin,
-	input [15:0] x, y,
+	input cin, // Input carry
+	input [15:0] x, y, // Summands
 	output Ppp, Gpp, // 2nd order propagate/generate
-	output [15:0] s
+	output [15:0] s // output sum
 	);
 			
 	// carry signal for each 4-bit sub-adder. We use 'h' to denote a 'hierarchical' carry.
@@ -36,16 +40,16 @@ endmodule
 
 /*-------------------Mid-Level-------------------*/
 	
-// 4-bit Carry-Lookahead block
+// 4-bit Carry-Lookahead block used in the top-level hierarchy.
 module CLA_4b (
 	input cin,
 	input [3:0] x, y,
-	output Pp, Gp,
+	output Pp, Gp, // 1st order propagate/generate.
 	output [3:0] s
 	);
 	
 	// Carry signal for each bit stage
-	wire [4:0] c;
+	wire [3:0] c;
 	assign c[0] = cin;
 	
 	// Generate and Propagate signals for each bit stage
@@ -59,12 +63,12 @@ module CLA_4b (
 	end
 	endgenerate
 	
-	// Verbose expressions for each carry are required to minimize gate delays.
+	// Verbose expressions for each carry are required to minimize gate delays from fitter's perspective.
 	// Compare with c[i+1] = G[i] | P[i] & c[i] in RTL viewer.
 	assign c[1] = G[0] | P[0] & cin;
 	assign c[2] = G[1] | P[1] & G[0] | P[1] & P[0] & cin;
 	assign c[3] = G[2] | P[2] & G[1] | P[2] & P[1] & G[0] | P[2] & P[1] & P[0] & cin;
-
+	
 	// The 2nd level CL hierarchy will produce c[4] carries under the 'lookahead' framework - no need to derive internally.
 	// using Pp and Gp (P', G') below
 	assign Pp = P[3] & P[2] & P[1] & P[0];
@@ -97,7 +101,8 @@ module adder_16b_testbench();
 	wire [15:0] s;
 
 	adder_16b dut (cin, x, y, Ppp, Gpp, s);
-	
+
+	// Further testcases were validated during the design phase, but only three edge cases were kept for submission clarity.
 	initial begin
 		// Test 1: Small positive values
 		cin = 0; x = 16'b0000_0000_0000_0101; y = 16'b0000_0000_0000_1011; #10;

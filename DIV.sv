@@ -1,15 +1,20 @@
+/*
+	Non-restoring 32-bit division with quotient placed in Z[31:0] and remainder places in Z[63:32].
+	Operations takes 32 cycles to complete.
+*/
+
 module DIV(
     
-    input [31:0] Q,
-    input [31:0] M,
+    input [31:0] Q, // Dividend
+    input [31:0] M, // Divisor
     input clk, resetn,
 	 
     output [31:0] quotient,
     output [31:0] remainder
 
 );
-    reg [63:0] AQ_reg;
-    integer count;	 
+   reg [63:0] AQ_reg;
+   integer count;	 
 
 	always @(posedge clk) begin
 		
@@ -63,7 +68,6 @@ module DIV(
 	end
 
 	
-   // Quartus yells at me when these are in the always block :(
    assign quotient = AQ_reg[31:0];
    assign remainder = AQ_reg[63:32];	
 

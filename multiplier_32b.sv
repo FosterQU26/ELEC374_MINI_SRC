@@ -1,3 +1,8 @@
+/*
+	multiplier_32b is a 32-bit multiplier leveraging both optimization structures: bit-pair recoding and carry-save addition.
+	It accepts M and Q as the multiplication and multiplier, respectively.
+*/
+
 
 module multiplier_32b (
 	input [31:0] M, Q,
@@ -5,7 +10,7 @@ module multiplier_32b (
 	);
 	
 	// All relevant variations of M for booth augend selection.
-	wire [32:0] Q_shifted = {Q, 1'b0}; // Left shifted Q by 1 for i-1 Booth check with i = 0.
+	wire [32:0] Q_shifted = {Q, 1'b0}; // Left shifted Q by 1 such that the i-1 Booth check is valid with i = 0.
 	wire [31:0] negM = -M;
 	wire [32:0] Mx2 = {M, 1'b0};
 	wire [32:0] negMx2 = {negM, 1'b0};
@@ -36,13 +41,17 @@ module multiplier_32b (
 		end
 	end
 	
+	// Final operands after reduction process
 	wire [63:0] reduced1, reduced2;
 	
+	// 16-to-2 CSA reducer.
 	CSA_tree_16to2 reduction (.augends(partial_products), .reduced1(reduced1), .reduced2(reduced2));
 	
+	// Final carry-propagate stage, with no carry-in, nor carry-out (result for 32-bit mult. is 64-bits)
 	adder_64b carry_propagate (.cin(1'b0), .x(reduced1), .y(reduced2), .s(result)); // No cout.
 	
 endmodule
+
 
 `timescale 1ns / 1ps
 
@@ -51,17 +60,10 @@ module multiplier_32b_tb;
     wire [63:0] result;
     
     // Instantiate the multiplier
-    multiplier_32b uut (
-        .M(M),
-        .Q(Q),
-        .result(result)
-    );
+    multiplier_32b dut (M, Q, Result);
     
     // Test procedure
     initial begin
-        $dumpfile("multiplier_32b_tb.vcd");
-        $dumpvars(0, multiplier_32b_tb);
-        
         // Test cases
         M = 32'd0; Q = 32'd0; #10; // 0 * 0
         $display("M=%d, Q=%d, result=%d", M, Q, result);

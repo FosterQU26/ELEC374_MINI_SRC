@@ -1,56 +1,67 @@
-//16 General purpose registers for 32-bit MINI SRC
-//Using a 16x32 reg_file for storage
+
 /*
-Control Signals:
-write: 	r0in .. r15in 
-read:		r0out .. r15out
-clear:	RegClr
+	R0_R15_GenPurposeRegs is an abstraction layer for reg_file.v, given the control signals required in the project specification.
+	It encodes the 16 one-hot-encoded enable and 'read' signals as 4-bit write and read addresses to the register file.
 */
 
-module R0_R15_GenPurposeRegs #(parameter ClrVal = 32'b0)(
+/*
+	DESIGN DECISIONS: 
+	We chose to *vectorize* the enable and read signals to provide more clarity to our design.
+	Therefore, in all instantiations of this module, signals like 'rXin' are grouped as a single vector GRin.
+	Similarly, signals like 'rXout' are grouped as a single vector GRout.
+	
+	Furthermore, this module incorporates two read ports in case we opt for a 3-bus design at a later phase.
+*/
+
+module R0_R15_GenPurposeRegs #(
+	parameter ClrVal = 32'b0
+	)(
 	input clk, reg_clear,
 	input [31:0] BusMuxOut,
-	input [15:0] GRin,
-	input	[15:0] GRoutA,
+	input [15:0] GRin, // enable vector (One-Hot). IN refers to the perspective of the registers, not the Bus.
+	input	[15:0] GRoutA, // read vector (One-Hot). OUT refers to the perspective of the registers, not the Bus.
 			
 	output [31:0] BusMuxIn,
 	output [31:0] BusMuxIn2
 	);
 	
-wire [3:0]w_addr; 
-wire [3:0]r_addrA;
-wire [3:0]r_addrB;
-wire [31:0]w_data;
-wire enable;
+	wire [3:0] w_addr; // Encoded write address
+	wire [3:0] r_addrA; // Encoded read addresses
+	wire [3:0] r_addrB;
+	wire [31:0] w_data; // Write data from Bus.
+	wire enable;
 
 
-//Encode 16 r..in signals to w_addr
+	//Encode 16 r..in signals to w_addr
 
-assign w_addr[0] = GRin[1] | GRin[3] | GRin[5] | GRin[7] | GRin[9] | GRin[11] | GRin[13] | GRin[15];
-assign w_addr[1] = GRin[2] | GRin[3] | GRin[6] | GRin[7] | GRin[10] | GRin[11] | GRin[14] | GRin[15];
-assign w_addr[2] = GRin[4] | GRin[5] | GRin[6] | GRin[7] | GRin[12] | GRin[13] | GRin[14] | GRin[15];
-assign w_addr[3] = GRin[8] | GRin[9] | GRin[10] | GRin[11] | GRin[12] | GRin[13] | GRin[14] |GRin[15];
+	assign w_addr[0] = GRin[1] | GRin[3] | GRin[5] | GRin[7] | GRin[9] | GRin[11] | GRin[13] | GRin[15];
+	assign w_addr[1] = GRin[2] | GRin[3] | GRin[6] | GRin[7] | GRin[10] | GRin[11] | GRin[14] | GRin[15];
+	assign w_addr[2] = GRin[4] | GRin[5] | GRin[6] | GRin[7] | GRin[12] | GRin[13] | GRin[14] | GRin[15];
+	assign w_addr[3] = GRin[8] | GRin[9] | GRin[10] | GRin[11] | GRin[12] | GRin[13] | GRin[14] |GRin[15];
 
-//Encode 16 r..out signals to r_addr
+	//Encode 16 r..out signals to r_addr
 
-assign r_addrA[0] = GRoutA[1] | GRoutA[3] | GRoutA[5] | GRoutA[7] | GRoutA[9] | GRoutA[11] | GRoutA[13] | GRoutA[15];
-assign r_addrA[1] = GRoutA[2] | GRoutA[3] | GRoutA[6] | GRoutA[7] | GRoutA[10] | GRoutA[11] | GRoutA[14] | GRoutA[15];
-assign r_addrA[2] = GRoutA[4] | GRoutA[5] | GRoutA[6] | GRoutA[7] | GRoutA[12] | GRoutA[13] | GRoutA[14] | GRoutA[15];
-assign r_addrA[3] = GRoutA[8] | GRoutA[9] | GRoutA[10] | GRoutA[11] | GRoutA[12] | GRoutA[13] | GRoutA[14] |GRoutA[15];
+	assign r_addrA[0] = GRoutA[1] | GRoutA[3] | GRoutA[5] | GRoutA[7] | GRoutA[9] | GRoutA[11] | GRoutA[13] | GRoutA[15];
+	assign r_addrA[1] = GRoutA[2] | GRoutA[3] | GRoutA[6] | GRoutA[7] | GRoutA[10] | GRoutA[11] | GRoutA[14] | GRoutA[15];
+	assign r_addrA[2] = GRoutA[4] | GRoutA[5] | GRoutA[6] | GRoutA[7] | GRoutA[12] | GRoutA[13] | GRoutA[14] | GRoutA[15];
+	assign r_addrA[3] = GRoutA[8] | GRoutA[9] | GRoutA[10] | GRoutA[11] | GRoutA[12] | GRoutA[13] | GRoutA[14] |GRoutA[15];
 
-assign r_addrB = r_addrA;
+	// (To be edited if 3-bus design)
+	assign r_addrB = r_addrA;
 
-//Mux BusMuxOut with default value for clear
+	// Mux BusMuxOut with default value for clear
 
-assign w_data = reg_clear ? ClrVal : BusMuxOut;
+	assign w_data = reg_clear ? ClrVal : BusMuxOut;
 
-//Enable logic: clear or any r..in signal
-//Using Reduction or to check if any value in encoded signal w_addr is 1
+	// Enable logic: clear or any r..in signal
+	// Using Reduction or to check if any value in encoded signal w_addr is 1
 
-assign enable = reg_clear | GRin[0] | (|w_addr);
+	assign enable = reg_clear | GRin[0] | (|w_addr);
 
-//16x32reg_file Module
-reg_file RF(clk, enable, r_addrA, r_addrB, w_addr, w_data, BusMuxIn, BusMuxIn2);
-
-
+	// 16x32reg_file Module
+	reg_file RF(clk, enable, r_addrA, r_addrB, w_addr, w_data, BusMuxIn, BusMuxIn2);
+	
 endmodule
+
+
+	

@@ -1,11 +1,12 @@
 
-// 32-bit adder with 2 adder_16b instances.
+// 64-bit adder with 4 adder_16b instances. This is a simple extension of adder_32b, thus no testbench was required for validation.
+
 module adder_64b (
-			input cin,
-			input [63:0] x, y,
-			output cout,
-			output [63:0] s
-			);
+	input cin,
+	input [63:0] x, y,
+	output cout,
+	output [63:0] s
+	);
 			
 	// carry-in signal for each 16-bit sub-adder. We use 'h' to denote a 'hierarchical' carry.
 	wire [4:0] hc;
@@ -14,7 +15,7 @@ module adder_64b (
 	// 'hierachical' Generate and Propagate signals.
 	wire [3:0] hP, hG;
 
-	// 4 CLA_4b instances for each 4-bit subset of x and y.
+	// 4 adder_16b instances for each 16-bit subset of x and y.
 	genvar i;
 	generate
 	for (i=0; i<4; i = i+1) begin : subadders	
