@@ -2,74 +2,70 @@ module DIV(
     
     input [31:0] Q,
     input [31:0] M,
-    input clk,
+    input clk, resetn,
 	 
     output [31:0] quotient,
     output [31:0] remainder
 
 );
-    reg [31:0] A;
-    reg [31:0] Q_reg;
-    integer count;
-
-    initial begin
-
-        A = 32'b0;
-        count = 0;
-        Q_reg = Q;
-
-    end
+    reg [63:0] AQ_reg;
+    integer count;	 
 
 	always @(posedge clk) begin
+		
+		if (~resetn) begin
+		
+			AQ_reg = 64'b0;
+			count = 0;
+		
+		end
+		
+		else if (count == 0) begin
+			
+			count = count + 1;
+			
+			AQ_reg = {32'b0, Q};
+			
+		end
+		
+		else if (count >= 1 && count <= 32) begin
+		
+			count = count + 1;
+		
+			AQ_reg = AQ_reg << 1;
+			$display("Shift") ;
+			
+			if (AQ_reg[63] == 1'b0) begin
+			
+				AQ_reg[63:32] = AQ_reg[63:32] - M;
+				$display("SUB");
+			
+			end
+			
+			else begin
+			
+				AQ_reg[63:32] = AQ_reg[63:32] + M;
+				$display("ADD");
+			
+			end
+			
+			AQ_reg[0] = (AQ_reg[63] == 1'b0) ? 1'b1 : 1'b0;
+			$display("The other thing happened");
+		
+		end
+		
+		else if (AQ_reg[63] == 1) begin
+		
+			AQ_reg[63:32] = AQ_reg[63:32] + M;
+			
+		end
+		
+	end
 
-        if (count < 31) begin
-
-            // Check the sign bit, then shift
-            if (A[0] == 0) begin
-
-                Q_reg = Q_reg << 1;
-                A = A << 1;
-
-                A = A - M;
-
-            end else begin
-
-                Q_reg = Q_reg << 1;
-                A = A << 1;
-
-                A = A + M;
-					 
-				end
-
-            // Check the sign bit again after shifting
-            if (A[0] == 0) begin
-
-                Q_reg[0] = 1;
-
-            end else begin
-
-                Q_reg[0] = 0;
-
-            end
-
-            count = count + 1;
-					 
-        end else begin
-
-            if (A[0] == 1)
-
-                A = A - M;
-					 
-					 count = 0;
- 
-        end
-
-    end	
-	
 	
    // Quartus yells at me when these are in the always block :(
-   assign quotient = Q_reg;
-   assign remainder = A;	
+   assign quotient = AQ_reg[31:0];
+   assign remainder = AQ_reg[63:32];	
 
 endmodule
 
@@ -78,7 +74,7 @@ module DIV_tb;
     // Declare inputs as reg type
     reg [31:0] Q;
     reg [31:0] M;
-    reg clk;
+    reg clk, resetn;
 
     // Declare outputs as wire type
     wire [31:0] quotient;
@@ -89,43 +85,81 @@ module DIV_tb;
         .Q(Q),
         .M(M),
         .clk(clk),
+		  .resetn(resetn),
         .quotient(quotient),
         .remainder(remainder)
     );
 
     // Clock generation
     always begin
-        #5 clk = ~clk; // Toggle clk every 5 time units (for a period of 10)
+	     clk = 0;
+        forever #5 clk = ~clk;
     end
 
-    // Test case procedure
-    initial begin
-        // Initialize inputs
-        clk = 0;
-        Q = 32'd50;  // Example dividend
-        M = 32'd7;   // Example divisor
+	initial begin
+		  
+		resetn = 0;
 
-        // Monitor outputs
-        $monitor("Time = %0d, Q = %d, M = %d, Quotient = %d, Remainder = %d", $time, Q, M, quotient, remainder);
+		@ (posedge clk)
 
-        // Apply reset
-        #5;  // Wait for a couple of clock cycles
-        Q = 32'd50;  // Set Q to a new value
-        M = 32'd7;   // Set M to a new value
-        #320;  // Wait some time to see the results
+		resetn = 1;
+		Q = 32'd38;  
+		M = 32'd6;   
 
-        // Apply another test case
-        Q = 32'd100;
-        M = 32'd6;
-        #320;
+		#340;  
 
-        Q = 32'd11;
-        M = 32'd3;
-        #320;
+		@ (posedge clk)
+		
+		resetn = 0;
 
-        // Finish the simulation
-        $stop;
-    end
+		@ (posedge clk)
+
+		resetn = 1;
+		Q = 32'd100;
+		M = 32'd25;
+		#340;
+		
+		@ (posedge clk)
+		
+		resetn = 0;
+
+		@ (posedge clk)
+
+		resetn = 1;
+		Q = {0,{31{1'b1}}};
+		M = {0,{31{1'b1}}};
+		#340;
+		
+		@ (posedge clk)
+		
+		resetn = 0;
+		
+		@ (posedge clk)
+
+		resetn = 1;
+		Q = {0,{31{1'b1}}};
+		M = 32'b1;
+		#340;
+		
+		@ (posedge clk)
+		
+		resetn = 0;
+		
+		@ (posedge clk)
+
+		resetn = 1;
+		Q = 32'b1;
+		M = 32'd50;
+		#340;
+		
+		@ (posedge clk)
+		
+		resetn = 0;
+		
+		@ (posedge clk)
+
+		$stop;
+	end
 
 endmodule
 
