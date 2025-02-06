@@ -1,3 +1,22 @@
+vsim work.datapath_tb
+
+add wave -position end  sim:/datapath_tb/clk
+add wave -position end  sim:/datapath_tb/GRout
+add wave -position end  sim:/datapath_tb/GRin
+add wave -position end  sim:/datapath_tb/DPout
+add wave -position end  sim:/datapath_tb/DPin
+add wave -position end  sim:/datapath_tb/ALUopp
+add wave -position end  sim:/datapath_tb/UUT/GR/RF/reg_array
+add wave -position end  sim:/datapath_tb/UUT/PC/q
+add wave -position end  sim:/datapath_tb/UUT/IR/q
+add wave -position end  sim:/datapath_tb/UUT/Y/q
+add wave -position end  sim:/datapath_tb/UUT/MAR/q
+add wave -position end  sim:/datapath_tb/UUT/MDR/q
+add wave -position end  sim:/datapath_tb/UUT/HI/q
+add wave -position end  sim:/datapath_tb/UUT/LO/q
+add wave -position end  sim:/datapath_tb/UUT/Z/q
+add wave -position end  sim:/datapath_tb/UUT/BusMuxOut
+
 radix define opcode {
     1       "ADD"
     2       "SUB"
