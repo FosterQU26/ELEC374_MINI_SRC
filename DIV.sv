@@ -38,24 +38,20 @@ module DIV(
 			count = count + 1;
 		
 			AQ_reg = AQ_reg << 1;
-			$display("Shift") ;
 			
 			if (AQ_reg[63] == 1'b0) begin
 			
 				AQ_reg[63:32] = AQ_reg[63:32] - M;
-				$display("SUB");
 			
 			end
 			
 			else begin
 			
 				AQ_reg[63:32] = AQ_reg[63:32] + M;
-				$display("ADD");
 			
 			end
 			
 			AQ_reg[0] = (AQ_reg[63] == 1'b0) ? 1'b1 : 1'b0;
-			$display("The other thing happened");
 		
 		end
 		
