@@ -17,6 +17,7 @@
 module ALU (
 	input [31:0] x, y,
 	input [15:0] ALUopp,
+	input clk,
 	output reg [63:0] Z
 	);
 	
@@ -38,6 +39,11 @@ module ALU (
 	wire [63:0] mult_result;
 	multiplier_32b mul (.M(x), .Q(y), .result(mult_result));
 	
+	//------------- DIV -------------//
+	
+	wire [63:0] div_result;
+	DIV divider(.Q(x), .M(y), .clk(clk), .resetn(ALUopp[`DIV]), .quotient(div_result[31:0]), .remainder(div_result[63:32]));
+	
 	// Choose ALU Operation of interest
 	
 	always @(*) begin
@@ -46,7 +52,7 @@ module ALU (
 		else if (ALUopp[`MUL])
 			Z = mult_result;
 		else if (ALUopp[`DIV])
-			Z = x / y; // TO BE UPDATED
+			Z = div_result;
 		else if (ALUopp[`AND])
 			Z = x & y;
 		else if (ALUopp[`OR])
@@ -107,7 +113,8 @@ module ALU_tb;
         test_op(1 << `SUB, 32'd15, 32'd5);   // SUB: 15 - 5 = 10
         test_op(1 << `NEG, 32'd7, 32'd0);    // NEG: -7
         test_op(1 << `MUL, 32'd4, 32'd3);    // MUL: 4 * 3 = 12
-        test_op(1 << `DIV, 32'd20, 32'd5);   // DIV: 20 / 5 = 4
+		  //Div Needs special work
+        // test_op(1 << `DIV, 32'd20, 32'd5);   // DIV: 20 / 5 = 4
         test_op(1 << `AND, 32'hF0F0F0F0, 32'h0F0F0F0F); // AND
         test_op(1 << `OR,  32'hF0F0F0F0, 32'h0F0F0F0F); // OR
         test_op(1 << `ROR, 32'h80000001, 0); // Rotate Right

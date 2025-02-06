@@ -99,7 +99,7 @@ Bus DataPathBus 	(BusMuxInGR, BusMuxInHI, BusMuxInLO, ZtoBusMux[63:32], ZtoBusMu
 						 GR_Read, DPout[`HI], DPout[`LO], DPout[`ZHI], DPout[`ZLO], DPout[`PC], DPout[`MDR], DPout[`INPORT], BusMuxOut );
 
 //ALU
-ALU DP_ALU 			(YtoA, BusMuxOut, ALUopp, CtoZ);
+ALU DP_ALU 			(YtoA, BusMuxOut, ALUopp, clk, CtoZ);
 					
 endmodule 
 
