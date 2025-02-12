@@ -15,7 +15,8 @@ module DIV(
 );
    reg [63:0] AQ_reg;
    integer count;	 
-	wire [31:0] M_signed = (M[31]) ? -M : M; 
+	wire [31:0] M_signed = (M[31]) ? -M : M;
+	wire [31:0] Q_signed = (Q[31]) ? -Q : Q;
 		
 	always @(posedge clk) begin
 		
@@ -30,7 +31,7 @@ module DIV(
 			
 			count = count + 1;
 			
-			AQ_reg = {32'b0, Q};
+			AQ_reg = {32'b0, Q_signed};
 			
 		end
 		
@@ -66,7 +67,7 @@ module DIV(
 
  	
 	
-   assign quotient =  (M[31]) ? -AQ_reg[31:0] : AQ_reg[31:0];
+	assign quotient =  (M[31] ^ Q[31]) ? -AQ_reg[31:0] : AQ_reg[31:0];
 	
    assign remainder =	AQ_reg[63:32];
 
