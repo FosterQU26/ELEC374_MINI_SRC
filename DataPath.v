@@ -187,7 +187,7 @@ module datapath_tb();
 		
 		//---------Preset R7----------//
 
-		load_reg(4'd6, {32'd10});
+		load_reg(4'd6, -{32'd10});
 	
 	
 		//---------AND R4, R3, R7---------//
@@ -196,7 +196,7 @@ module datapath_tb();
 		T1 (32'h81300000);
 		T2 ();
 		T3 (4'd2);
-		T4 (4'd6, `MUL);
+		T4 (4'd6, `DIV);
 		T5 (4'd0, 1'b1); //HILO
 		T6 ();
 		
