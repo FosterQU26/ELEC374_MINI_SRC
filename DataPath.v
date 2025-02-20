@@ -52,7 +52,7 @@
 
 module DataPath (
 	/*******Control Signals******/
-	input clk, clr,
+	input clk, clr, CONin,
 	
 	//Register Write Control
 	input [15:0] GRin,
@@ -66,13 +66,14 @@ module DataPath (
 	input [15:0] ALUopp,
 	
 	//Input for Disconnected register ends (INPortIn)
-	input  [31:0]INPORTin,
-	input	 [31:0]Mdatain,
+	input  [31:0] INPORTin,
+	input	 [31:0] Mdatain,
 	//Output Disconnected Register ends (IRout, MARout, OUTPORTout)
 	output [31:0] IRout, 
 	output [31:0] MARout, 
 	output [31:0] OUTPORTout,
-	output [31:0] BusMuxInMDR
+	output [31:0] BusMuxInMDR,
+	output CON
 );
 
 
@@ -113,7 +114,12 @@ module DataPath (
 	register Z			(clr, clk, DPin[`Z] , CtoZ, ZtoBusMux);
 		defparam Z.DATA_WIDTH_IN = 64,
 					Z.DATA_WIDTH_OUT = 64;
-				
+	
+	wire [1:0] IR_20_19;
+	assign IR_20_19 = IRout[20:19];
+
+	conditional_ff_logic CON_FF (IR_20_19, BusMuxOut, CONin, clk, CON);
+	
 	// Bus	
 	Bus DataPathBus 	(BusMuxInGR, BusMuxInHI, BusMuxInLO, ZtoBusMux[63:32], ZtoBusMux[31:0], BusMuxInPC, BusMuxInMDR, BusMuxInINPORT,
 							 GR_Read, DPout[`HI], DPout[`LO], DPout[`ZHI], DPout[`ZLO], DPout[`PC], DPout[`MDR], DPout[`INPORT], BusMuxOut );
@@ -128,7 +134,7 @@ endmodule
 module datapath_tb();
 	
 	// Control Signals
-	reg clk, clr;
+	reg clk, clr, CONin;
 	
 	// Register Write Control
 	reg [15:0] GRin;
@@ -149,9 +155,10 @@ module datapath_tb();
 	wire [31:0] MARout; 
 	wire [31:0] OUTPORTout;
 	wire [31:0] BusMuxInMDR;
+	wire CON;
 
 	// Unit Under Test
-	DataPath UUT (clk, clr, GRin, DPin, GRout, DPout, ALUopp, INPORTin, Mdatain, IRout, MARout, OUTPORTout, BusMuxInMDR);
+	DataPath UUT (clk, clr, CONin, GRin, DPin, GRout, DPout, ALUopp, INPORTin, Mdatain, IRout, MARout, OUTPORTout, BusMuxInMDR, CON);
 	
 	// Establishing Clock Behaviour
 	parameter clock_period = 20;
