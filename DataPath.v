@@ -34,6 +34,7 @@
 `define HI 10
 `define LO 11
 `define READ 12
+`define C 	13
 
 `define ADD 0
 `define SUB 1
@@ -53,13 +54,12 @@
 module DataPath (
 	/*******Control Signals******/
 	input clk, clr,
+	input Gra, Grb, Grc, Rin, Rout, BAout,
 	
 	//Register Write Control
-	input [15:0] GRin,
 	input	[15:0] DPin,
 	
 	//Register Read Control
-	input [15:0] GRout,
 	input	[15:0] DPout,
 	
 	//ALU Control
@@ -69,7 +69,6 @@ module DataPath (
 	input  [31:0]INPORTin,
 	input	 [31:0]Mdatain,
 	//Output Disconnected Register ends (IRout, MARout, OUTPORTout)
-	output [31:0] IRout, 
 	output [31:0] MARout, 
 	output [31:0] OUTPORTout,
 	output [31:0] BusMuxInMDR
@@ -90,6 +89,11 @@ module DataPath (
 	wire [63:0] CtoZ;
 
 	wire [63:0] ZtoBusMux;
+	
+	wire [31:0] IRout;
+	wire [31:0] C;
+	wire [15:0] GRin;
+	wire [15:0] GRout;
 
 	wire GR_Read;
 	assign GR_Read = |GRout;
@@ -115,11 +119,15 @@ module DataPath (
 					Z.DATA_WIDTH_OUT = 64;
 				
 	// Bus	
-	Bus DataPathBus 	(BusMuxInGR, BusMuxInHI, BusMuxInLO, ZtoBusMux[63:32], ZtoBusMux[31:0], BusMuxInPC, BusMuxInMDR, BusMuxInINPORT,
-							 GR_Read, DPout[`HI], DPout[`LO], DPout[`ZHI], DPout[`ZLO], DPout[`PC], DPout[`MDR], DPout[`INPORT], BusMuxOut );
+	Bus DataPathBus 	(BusMuxInGR, BusMuxInHI, BusMuxInLO, ZtoBusMux[63:32], ZtoBusMux[31:0], BusMuxInPC, BusMuxInMDR, BusMuxInINPORT, C,
+							 GR_Read, DPout[`HI], DPout[`LO], DPout[`ZHI], DPout[`ZLO], DPout[`PC], DPout[`MDR], DPout[`INPORT], DPout[`C], BusMuxOut );
 
 	// ALU
 	ALU DP_ALU 			(YtoA, BusMuxOut, ALUopp, clk, CtoZ);
+	
+	//Select And Encode Module
+	
+	SelectAndEncodeLogic DP_SnEL(IRout, Gra, Grb, Grc, Rin, Rout, BAout, C, GRin, GRout);
 					
 endmodule 
 
@@ -129,13 +137,12 @@ module datapath_tb();
 	
 	// Control Signals
 	reg clk, clr;
+	reg Gra, Grb, Grc, Rin, Rout, BAout;
 	
 	// Register Write Control
-	reg [15:0] GRin;
 	reg [15:0] DPin;
 	
 	// Register Read Control
-	reg [15:0] GRout;
 	reg [15:0] DPout;
 	
 	// ALU Control
@@ -151,7 +158,7 @@ module datapath_tb();
 	wire [31:0] BusMuxInMDR;
 
 	// Unit Under Test
-	DataPath UUT (clk, clr, GRin, DPin, GRout, DPout, ALUopp, INPORTin, Mdatain, IRout, MARout, OUTPORTout, BusMuxInMDR);
+	DataPath UUT (clk, clr, Gra, Grb, Grc, Rin, Rout, BAout, DPin, DPout, ALUopp, INPORTin, Mdatain, IRout, MARout, OUTPORTout, BusMuxInMDR);
 	
 	// Establishing Clock Behaviour
 	parameter clock_period = 20;
@@ -164,9 +171,11 @@ module datapath_tb();
 		//---------Default Values----------//
 		
 		// Clear signal
-		clr <= 0; 
-		// Register Identifiers: GR = General Register, DP = Datapath Register
-		GRin <= 16'b0; DPin <= 16'b0; GRout <= 16'b0; DPout <= 16'b0;
+		clr <= 0;
+		// General Register Signals
+		Gra<= 0; Grb<= 0; Grc<= 0; Rin<= 0; Rout<= 0; BAout<= 0;
+		// Register Identifiers: DP = Datapath Register
+		DPin <= 16'b0; DPout <= 16'b0;
 		//ALU Control.
 		ALUopp <= 16'b0;
 		// Memory Data In.
@@ -176,11 +185,15 @@ module datapath_tb();
 		@(posedge clk)
 		//---------Preset R3----------//
 		
-		load_reg(4'd3, 32'h22); 
+		//Load Reg doesnt work without GRin
+		
+		//load_reg(4'd3, 32'h22); 
 		
 		//---------Preset R7----------//
 
-		load_reg(4'd7, 32'h24);
+		//Load Reg doesnt work without GRin
+		
+		//load_reg(4'd7, 32'h24);
 	
 	
 		//---------AND R4, R3, R7---------//
@@ -188,24 +201,25 @@ module datapath_tb();
 		T0 ();
 		T1 (32'h2A2B8000);
 		T2 ();
-		T3 (4'd3);
-		T4 (4'd7, `AND);
-		T5 (4'd4, 1'b0); // No HILO
+		T3 ();
+		T4 (`AND);
+		T5 (1'b0); // No HILO
 		
 		@(posedge clk)
 		$stop;
 	end
 	
+	//TODO: Make a way to load regs using a Command put into IR since we dont ahve control over GRin/GRout anymore
 	task load_reg (input [3:0] reg_id, input [31:0] value);
 		begin
 			Mdatain <= value; DPin[`READ] <= 1; DPin[`MDR] <= 1;
 		
 			@(posedge clk)
 			Mdatain <= 32'b0; DPin[`READ] <= 0; DPin[`MDR] <= 0; // Reset from previous cycle
-			DPout[`MDR] <= 1; GRin[reg_id] <= 1; 
+			DPout[`MDR] <= 1; //GRin[reg_id] <= 1; 
 			
 			@(posedge clk)
-			DPout[`MDR] <= 0; GRin[reg_id] <= 0;
+			DPout[`MDR] <= 0; //GRin[reg_id] <= 0;
 		end
 	endtask
 	
@@ -237,34 +251,34 @@ module datapath_tb();
 		end
 	endtask
 	
-	task T3 (input [3:0] reg_id);
+	task T3 ();
 		begin
-			GRout[reg_id] <= 1; DPin[`Y] <= 1; // Y <- [GR[reg_id]]
+			Rout <= 1; Gra <= 1; DPin[`Y] <= 1; // Y <- [GR[GRa]]
 			
 			@(posedge clk)
-			GRout[reg_id] <= 0; DPin[`Y] <= 0;
+			Rout <= 0; Gra <= 0; DPin[`Y] <= 0;
 		end
 	endtask
 	
-	task T4 (input [3:0] reg_id, input [3:0] opp);
+	task T4 (input [3:0] opp);
 		begin
-			GRout[reg_id] <= 1; ALUopp[opp] <= 1; DPin[`Z] <= 1; // Z <- [Y] opp [GR[reg_id]]
+			Rout <= 1; Grb <= 1; ALUopp[opp] <= 1; DPin[`Z] <= 1; // Z <- [Y] opp [GR[Grb]]
 			
 			@(posedge clk)
-			GRout[reg_id] <= 0; ALUopp[opp] <= 0; DPin[`Z] <= 0;
+			Rout <= 0; Grb <= 0; ALUopp[opp] <= 0; DPin[`Z] <= 0;
 		end
 	endtask
 	
-	task T5 (input [3:0] reg_id, input HILO);
+	task T5 (input HILO);
 		begin
 			DPout[`ZLO] <= 1; 
 			if (HILO)
 				DPin[`LO] <= 1;
 			else
-				GRin[reg_id] <= 1; // GR[reg_id] <- [ZLO]
+				Rin <= 1; Grc <= 1; // GR[Grc] <- [ZLO]
 			
 			@(posedge clk)
-			DPout[`ZLO] <= 0; GRin[reg_id] <= 0; DPin[`LO] <= 0;
+			DPout[`ZLO] <= 0; Rin <= 0; Grc <= 0; DPin[`LO] <= 0;
 		end
 	endtask
 	

@@ -14,8 +14,9 @@ module Bus (
 	input [31:0] PC_in,
 	input [31:0] MDR_in,
 	input [31:0] INPORT_in,
+	input [31:0] C_in,		//Added C for Phase 2
 	
-	input R0R15_out, HI_out, LO_out, ZHI_out, ZLO_out, PC_out, MDR_out, INPORT_out,
+	input R0R15_out, HI_out, LO_out, ZHI_out, ZLO_out, PC_out, MDR_out, INPORT_out, C_out,
 	
 	// data-out from the bus
 	output wire [31:0] BusMuxOut
@@ -34,6 +35,7 @@ module Bus (
 		else if 	(PC_out) 		q = PC_in;
 		else if 	(MDR_out) 		q = MDR_in;
 		else if 	(INPORT_out) 	q = INPORT_in;
+		else if 	(C_out)			q = C_in;
 		else 							q = 32'b0;
 		
 	end
