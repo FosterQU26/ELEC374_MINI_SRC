@@ -158,7 +158,7 @@ module datapath_tb();
 	wire [31:0] BusMuxInMDR;
 
 	// Unit Under Test
-	DataPath UUT (clk, clr, Gra, Grb, Grc, Rin, Rout, BAout, DPin, DPout, ALUopp, INPORTin, Mdatain, IRout, MARout, OUTPORTout, BusMuxInMDR);
+	DataPath UUT (clk, clr, Gra, Grb, Grc, Rin, Rout, BAout, DPin, DPout, ALUopp, INPORTin, Mdatain, MARout, OUTPORTout, BusMuxInMDR);
 	
 	// Establishing Clock Behaviour
 	parameter clock_period = 20;
@@ -185,25 +185,23 @@ module datapath_tb();
 		@(posedge clk)
 		//---------Preset R3----------//
 		
-		//Load Reg doesnt work without GRin
 		
-		//load_reg(4'd3, 32'h22); 
+		//1011 0001 1
+		load_reg(32'hB180_0000, 32'h22); 
 		
 		//---------Preset R7----------//
-
-		//Load Reg doesnt work without GRin
 		
-		//load_reg(4'd7, 32'h24);
-	
+		//1011 0011 1
+		load_reg(32'hB380_0000, 32'h24);
 	
 		//---------AND R4, R3, R7---------//
 		
-		T0 ();
-		T1 (32'h2A2B8000);
-		T2 ();
-		T3 ();
-		T4 (`AND);
-		T5 (1'b0); // No HILO
+//		T0 ();
+//		T1 (32'h2A2B8000);
+//		T2 ();
+//		T3 ();
+//		T4 (`AND);
+//		T5 (1'b0); // No HILO
 		
 		@(posedge clk)
 		$stop;
@@ -217,11 +215,16 @@ module datapath_tb();
 			INPORTin <= op_code; DPin[`INPORT] <= 1;
 		
 			@(posedge clk)
-			INPORTin <= value;; // Reset from previous cycle
-			DPout[`INPORT] <= 1; DPin[`IR] <= 1; 
+			
+			INPORTin <= value; DPin[`INPORT] <= 1;
+			DPout[`INPORT] <= 1; DPin[`IR] <= 1;
 			
 			@(posedge clk)
-			DPout[`MDR] <= 0; DPin[`IR] <= 0;
+			INPORTin <= 32'b0; DPin[`INPORT] <= 0;
+			DPout[`INPORT] <= 1; Gra <= 1; Rin <= 1;
+			
+			@(posedge clk)
+			DPout[`INPORT] <= 0; Gra <= 0; Rin <= 0;
 			
 		end
 	endtask
