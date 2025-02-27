@@ -196,12 +196,12 @@ module datapath_tb();
 	
 		//---------AND R4, R3, R7---------//
 		
-//		T0 ();
-//		T1 (32'h2A2B8000);
-//		T2 ();
-//		T3 ();
-//		T4 (`AND);
-//		T5 (1'b0); // No HILO
+		T0 ();
+		T1 (32'h2A1B8000);
+		T2 ();
+		T3 ();
+		T4 (`AND);
+		T5 (1'b0); // No HILO
 		
 		@(posedge clk)
 		$stop;
@@ -259,19 +259,19 @@ module datapath_tb();
 	
 	task T3 ();
 		begin
-			Rout <= 1; Gra <= 1; DPin[`Y] <= 1; // Y <- [GR[GRa]]
+			Rout <= 1; Grb <= 1; DPin[`Y] <= 1; // Y <- [GR[GRb]]
 			
 			@(posedge clk)
-			Rout <= 0; Gra <= 0; DPin[`Y] <= 0;
+			Rout <= 0; Grb <= 0; DPin[`Y] <= 0;
 		end
 	endtask
 	
 	task T4 (input [3:0] opp);
 		begin
-			Rout <= 1; Grb <= 1; ALUopp[opp] <= 1; DPin[`Z] <= 1; // Z <- [Y] opp [GR[Grb]]
+			Rout <= 1; Grc <= 1; ALUopp[opp] <= 1; DPin[`Z] <= 1; // Z <- [Y] opp [GR[Grc]]
 			
 			@(posedge clk)
-			Rout <= 0; Grb <= 0; ALUopp[opp] <= 0; DPin[`Z] <= 0;
+			Rout <= 0; Grc <= 0; ALUopp[opp] <= 0; DPin[`Z] <= 0;
 		end
 	endtask
 	
@@ -281,7 +281,7 @@ module datapath_tb();
 			if (HILO)
 				DPin[`LO] <= 1;
 			else
-				Rin <= 1; Grc <= 1; // GR[Grc] <- [ZLO]
+				Rin <= 1; Gra <= 1; // GR[Gra] <- [ZLO]
 			
 			@(posedge clk)
 			DPout[`ZLO] <= 0; Rin <= 0; Grc <= 0; DPin[`LO] <= 0;
