@@ -82,7 +82,6 @@ module DataPath (
 
 
 	wire [31:0] BusMuxInGR; 
-	wire [31:0] BusMuxInGR2;
 	wire [31:0] BusMuxInPC;
 	wire [31:0] BusMuxInINPORT;
 	wire [31:0] BusMuxInHI;
@@ -105,7 +104,7 @@ module DataPath (
 	assign MDRin = DPin[`READ] ?  Mdatain : BusMuxOut ;
 
 	// General Purpose Register instantiation
-	R0_R15_GenPurposeRegs GR(clk, clr, BusMuxOut, GRin, GRout, BusMuxInGR, BusMuxInGR2);
+	R0_R15_GenPurposeRegs GR(clk, clr, BAout, BusMuxOut, GRin, GRout, BusMuxInGR);
 	
 	// All Datapath Register instantiations.
 	register PC			(clr, clk, DPin[`PC], BusMuxOut, BusMuxInPC);

@@ -16,20 +16,19 @@
 module R0_R15_GenPurposeRegs #(
 	parameter ClrVal = 32'b0
 	)(
-	input clk, reg_clear,
+	input clk, reg_clear, BAout,
 	input [31:0] BusMuxOut,
 	input [15:0] GRin, // enable vector (One-Hot). IN refers to the perspective of the registers, not the Bus.
 	input	[15:0] GRoutA, // read vector (One-Hot). OUT refers to the perspective of the registers, not the Bus.
 			
-	output [31:0] BusMuxIn,
-	output [31:0] BusMuxIn2
+	output [31:0] BusMuxIn
 	);
 	
 	wire [3:0] w_addr; // Encoded write address
-	wire [3:0] r_addrA; // Encoded read addresses
-	wire [3:0] r_addrB;
+	wire [3:0] r_addr; // Encoded read addresses
 	wire [31:0] w_data; // Write data from Bus.
 	wire enable;
+	wire [31:0] data_out;
 
 
 	//Encode 16 r..in signals to w_addr
@@ -41,13 +40,10 @@ module R0_R15_GenPurposeRegs #(
 
 	//Encode 16 r..out signals to r_addr
 
-	assign r_addrA[0] = GRoutA[1] | GRoutA[3] | GRoutA[5] | GRoutA[7] | GRoutA[9] | GRoutA[11] | GRoutA[13] | GRoutA[15];
-	assign r_addrA[1] = GRoutA[2] | GRoutA[3] | GRoutA[6] | GRoutA[7] | GRoutA[10] | GRoutA[11] | GRoutA[14] | GRoutA[15];
-	assign r_addrA[2] = GRoutA[4] | GRoutA[5] | GRoutA[6] | GRoutA[7] | GRoutA[12] | GRoutA[13] | GRoutA[14] | GRoutA[15];
-	assign r_addrA[3] = GRoutA[8] | GRoutA[9] | GRoutA[10] | GRoutA[11] | GRoutA[12] | GRoutA[13] | GRoutA[14] |GRoutA[15];
-
-	// (To be edited if 3-bus design)
-	assign r_addrB = r_addrA;
+	assign r_addr[0] = GRoutA[1] | GRoutA[3] | GRoutA[5] | GRoutA[7] | GRoutA[9] | GRoutA[11] | GRoutA[13] | GRoutA[15];
+	assign r_addr[1] = GRoutA[2] | GRoutA[3] | GRoutA[6] | GRoutA[7] | GRoutA[10] | GRoutA[11] | GRoutA[14] | GRoutA[15];
+	assign r_addr[2] = GRoutA[4] | GRoutA[5] | GRoutA[6] | GRoutA[7] | GRoutA[12] | GRoutA[13] | GRoutA[14] | GRoutA[15];
+	assign r_addr[3] = GRoutA[8] | GRoutA[9] | GRoutA[10] | GRoutA[11] | GRoutA[12] | GRoutA[13] | GRoutA[14] |GRoutA[15];
 
 	// Mux BusMuxOut with default value for clear
 
@@ -59,7 +55,9 @@ module R0_R15_GenPurposeRegs #(
 	assign enable = reg_clear | GRin[0] | (|w_addr);
 
 	// 16x32reg_file Module
-	reg_file RF(clk, enable, r_addrA, r_addrB, w_addr, w_data, BusMuxIn, BusMuxIn2);
+	reg_file RF(clk, enable, r_addr, w_addr, w_data, data_out);
+	
+	assign BusMuxIn = (GRin[0] && BAout) ? 32'b0 : data_out;
 	
 endmodule
 
