@@ -210,16 +210,19 @@ module datapath_tb();
 	end
 	
 	//TODO: Make a way to load regs using a Command put into IR since we dont ahve control over GRin/GRout anymore
-	task load_reg (input [3:0] reg_id, input [31:0] value);
+
+	//The Plan: First Use Inport to load value into IR, Then USe inport adn IRtoload into reg
+	task load_reg (input [31:0] op_code, input [31:0] value);
 		begin
-			Mdatain <= value; DPin[`READ] <= 1; DPin[`MDR] <= 1;
+			INPORTin <= op_code; DPin[`INPORT] <= 1;
 		
 			@(posedge clk)
-			Mdatain <= 32'b0; DPin[`READ] <= 0; DPin[`MDR] <= 0; // Reset from previous cycle
-			DPout[`MDR] <= 1; //GRin[reg_id] <= 1; 
+			INPORTin <= value;; // Reset from previous cycle
+			DPout[`INPORT] <= 1; DPin[`IR] <= 1; 
 			
 			@(posedge clk)
-			DPout[`MDR] <= 0; //GRin[reg_id] <= 0;
+			DPout[`MDR] <= 0; DPin[`IR] <= 0;
+			
 		end
 	endtask
 	
