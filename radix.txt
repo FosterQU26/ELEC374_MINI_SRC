@@ -1,8 +1,13 @@
 vsim work.datapath_tb
 
 add wave -position end  sim:/datapath_tb/clk
-add wave -position end  sim:/datapath_tb/GRout
-add wave -position end  sim:/datapath_tb/GRin
+add wave -position end  sim:/datapath_tb/UUT/CONin
+add wave -position end  sim:/datapath_tb/UUT/Gra
+add wave -position end  sim:/datapath_tb/UUT/Grb
+add wave -position end  sim:/datapath_tb/UUT/Grc
+add wave -position end  sim:/datapath_tb/UUT/Rin
+add wave -position end  sim:/datapath_tb/UUT/Rout
+add wave -position end  sim:/datapath_tb/UUT/BAout
 add wave -position end  sim:/datapath_tb/DPout
 add wave -position end  sim:/datapath_tb/DPin
 add wave -position end  sim:/datapath_tb/ALUopp
