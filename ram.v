@@ -13,7 +13,7 @@ module ram #(
 	// This definition enforces a right-to-left increasing bit significance, and an up-to-down addressing scheme.
 	reg [width-1:0] memory_array [0:2**depth-1];
 	
-	initial $readmemh("C:/Users/foste/Documents/3rd_Year_24-25/ELEC374/ELEC374_MINI_SRC/ram.txt", memory_array);
+	initial $readmemh("ram.txt", memory_array);
 	
 	// r_data1/2 are immediately available as r_addr1/2 is presented to the RF
 	// Two read addresses are supported by the register file should we choose to implement a 3-bus design in later phases.
