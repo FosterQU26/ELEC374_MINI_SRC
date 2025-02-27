@@ -37,5 +37,3 @@ simulation/
 *.qpf.lock
 *.qsf.lock
 
-#Ignore the ram.v becasue it has an abs path
-ram.v
