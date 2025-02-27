@@ -57,6 +57,54 @@ module ALU (
 	wire [63:0] div_result;
 	DIV divider(.Q(x), .M(y), .clk(clk), .resetn(ALUopp[`DIV]), .quotient(div_result[31:0]), .remainder(div_result[63:32]));
 	
+	//------------- Shift and Rotate -------------//
+	
+	// BARREL SHIFT/ROTATE Design.
+	reg [31:0] shift_result;
+	always @(*) begin
+		shift_result = x;
+		if (ALUopp[`SLL]) begin
+			if (y[4]) shift_result = shift_result << 16;
+			if (y[3]) shift_result = shift_result << 8;
+			if (y[2]) shift_result = shift_result << 4;
+			if (y[1]) shift_result = shift_result << 2;
+			if (y[0]) shift_result = shift_result << 1;
+		end
+		else 
+		if (ALUopp[`SRL]) begin
+			if (y[4]) shift_result = shift_result >> 16;
+			if (y[3]) shift_result = shift_result >> 8;
+			if (y[2]) shift_result = shift_result >> 4;
+			if (y[1]) shift_result = shift_result >> 2;
+			if (y[0]) shift_result = shift_result >> 1;
+		end
+		else
+		if (ALUopp[`SRA]) begin
+			if (y[4]) shift_result = shift_result >>> 16;
+			if (y[3]) shift_result = shift_result >>> 8;
+			if (y[2]) shift_result = shift_result >>> 4;
+			if (y[1]) shift_result = shift_result >>> 2;
+			if (y[0]) shift_result = shift_result >>> 1;
+		end
+		else
+		if (ALUopp[`ROR]) begin
+			if (y[4]) shift_result = {shift_result[15:0], shift_result[31:16]};
+			if (y[3]) shift_result = {shift_result[7:0], shift_result[31:8]};
+			if (y[2]) shift_result = {shift_result[3:0], shift_result[31:4]};
+			if (y[1]) shift_result = {shift_result[1:0], shift_result[31:2]};
+			if (y[0]) shift_result = {shift_result[0], shift_result[31:1]};
+		end
+		else
+		if (ALUopp[`ROL]) begin
+			if (y[4]) shift_result = {shift_result[15:0], shift_result[31:16]};
+			if (y[3]) shift_result = {shift_result[23:0], shift_result[31:24]};
+			if (y[2]) shift_result = {shift_result[27:0], shift_result[31:28]};
+			if (y[1]) shift_result = {shift_result[29:0], shift_result[31:30]};
+			if (y[0]) shift_result = {shift_result[30:0], shift_result[31]};
+		end
+	
+	end
+	
 	// Choose ALU Operation of interest
 	
 	always @(*) begin
@@ -65,21 +113,13 @@ module ALU (
 		else if (ALUopp[`MUL])
 			Z = mult_result;
 		else if (ALUopp[`DIV])
-			Z = div_result; // TO BE UPDATED
+			Z = div_result;
 		else if (ALUopp[`AND])
 			Z = x & y;
 		else if (ALUopp[`OR])
 			Z = x | y;
-		else if (ALUopp[`ROR])
-			Z = {x[0], x[31:1]};
-		else if (ALUopp[`ROL])
-			Z = {x[30:0], x[31]};
-		else if (ALUopp[`SLL])
-			Z = {x[30:0], 1'b0};
-		else if (ALUopp[`SRA])
-			Z = {x[31], x[31:1]};
-		else if (ALUopp[`SRL])
-			Z = {1'b0, x[31:1]};
+		else if (ALUopp[`SLL] | ALUopp[`SLL] | ALUopp[`SLL] | ALUopp[`ROR] | ALUopp[`ROL])
+			Z = shift_result;
 		else if (ALUopp[`NOT])
 			Z = ~x;			
 		else

@@ -15,7 +15,9 @@ module DIV(
 );
    reg [63:0] AQ_reg;
    integer count;	 
-
+	wire [31:0] M_signed = (M[31]) ? -M : M;
+	wire [31:0] Q_signed = (Q[31]) ? -Q : Q;
+		
 	always @(posedge clk) begin
 		
 		if (~resetn) begin
@@ -29,7 +31,7 @@ module DIV(
 			
 			count = count + 1;
 			
-			AQ_reg = {32'b0, Q};
+			AQ_reg = {32'b0, Q_signed};
 			
 		end
 		
@@ -38,38 +40,36 @@ module DIV(
 			count = count + 1;
 		
 			AQ_reg = AQ_reg << 1;
-			$display("Shift") ;
 			
 			if (AQ_reg[63] == 1'b0) begin
 			
-				AQ_reg[63:32] = AQ_reg[63:32] - M;
-				$display("SUB");
+				AQ_reg[63:32] = AQ_reg[63:32] - M_signed;
 			
 			end
 			
 			else begin
 			
-				AQ_reg[63:32] = AQ_reg[63:32] + M;
-				$display("ADD");
+				AQ_reg[63:32] = AQ_reg[63:32] + M_signed;
 			
 			end
 			
 			AQ_reg[0] = (AQ_reg[63] == 1'b0) ? 1'b1 : 1'b0;
-			$display("The other thing happened");
 		
 		end
 		
 		else if (AQ_reg[63] == 1) begin
 		
-			AQ_reg[63:32] = AQ_reg[63:32] + M;
+			AQ_reg[63:32] = AQ_reg[63:32] + M_signed;
 			
 		end
 		
 	end
 
+ 	
 	
-   assign quotient = AQ_reg[31:0];
-   assign remainder = AQ_reg[63:32];	
+	assign quotient =  (M[31] ^ Q[31]) ? -AQ_reg[31:0] : AQ_reg[31:0];
+	
+   assign remainder =	AQ_reg[63:32];
 
 endmodule
 

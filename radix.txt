@@ -1,0 +1,56 @@
+vsim work.datapath_tb
+
+add wave -position end  sim:/datapath_tb/clk
+add wave -position end  sim:/datapath_tb/GRout
+add wave -position end  sim:/datapath_tb/GRin
+add wave -position end  sim:/datapath_tb/DPout
+add wave -position end  sim:/datapath_tb/DPin
+add wave -position end  sim:/datapath_tb/ALUopp
+add wave -position end  sim:/datapath_tb/UUT/GR/RF/reg_array
+add wave -position end  sim:/datapath_tb/UUT/PC/q
+add wave -position end  sim:/datapath_tb/UUT/IR/q
+add wave -position end  sim:/datapath_tb/UUT/Y/q
+add wave -position end  sim:/datapath_tb/UUT/MAR/q
+add wave -position end  sim:/datapath_tb/UUT/MDR/q
+add wave -position end  sim:/datapath_tb/UUT/HI/q
+add wave -position end  sim:/datapath_tb/UUT/LO/q
+add wave -position end  sim:/datapath_tb/UUT/Z/q
+add wave -position end  sim:/datapath_tb/UUT/BusMuxOut
+
+radix define opcode {
+    1       "ADD"
+    2       "SUB"
+    4       "NEG"
+    8       "MUL"
+    16      "DIV"
+    32      "AND"
+    64      "OR"
+    128     "ROR"
+    256     "ROL"
+    512     "SLL"
+    1024    "SRA"
+    2048    "SRL"
+    4096    "NOT"
+    8192    "INC"
+    default "UNKNOWN"
+}
+
+radix define reg_ids {
+    1       "PC"
+    2       "IR"
+    4       "Y"
+    8       "MAR"
+    16      "MDR"
+    32      "INPORT"
+    64      "OUTPORT"
+    128     "Z"
+    136     "Z & MAR"
+    256     "ZHI"
+    512     "ZLO"
+    1024    "HI"
+    2048    "LO"
+    4096    "READ"
+    4112    "READ & MDR"  ;# 4096 (READ) | 16 (MDR) = 4112
+    4113    "READ & MDR & PC"
+    default "UNKNOWN"
+}

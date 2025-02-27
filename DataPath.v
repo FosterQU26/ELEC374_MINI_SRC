@@ -53,8 +53,10 @@
 
 module DataPath (
 	/*******Control Signals******/
-	input clk, clr,
+
+	input clk, clr, CONin,
 	input Gra, Grb, Grc, Rin, Rout, BAout,
+
 	
 	//Register Write Control
 	input	[15:0] DPin,
@@ -66,12 +68,13 @@ module DataPath (
 	input [15:0] ALUopp,
 	
 	//Input for Disconnected register ends (INPortIn)
-	input  [31:0]INPORTin,
-	input	 [31:0]Mdatain,
+	input  [31:0] INPORTin,
+	input	 [31:0] Mdatain,
 	//Output Disconnected Register ends (IRout, MARout, OUTPORTout)
 	output [31:0] MARout, 
 	output [31:0] OUTPORTout,
-	output [31:0] BusMuxInMDR
+	output [31:0] BusMuxInMDR,
+	output CON
 );
 
 
@@ -117,7 +120,12 @@ module DataPath (
 	register Z			(clr, clk, DPin[`Z] , CtoZ, ZtoBusMux);
 		defparam Z.DATA_WIDTH_IN = 64,
 					Z.DATA_WIDTH_OUT = 64;
-				
+	
+	wire [1:0] IR_20_19;
+	assign IR_20_19 = IRout[20:19];
+
+	conditional_ff_logic CON_FF (IR_20_19, BusMuxOut, CONin, clk, CON);
+	
 	// Bus	
 	Bus DataPathBus 	(BusMuxInGR, BusMuxInHI, BusMuxInLO, ZtoBusMux[63:32], ZtoBusMux[31:0], BusMuxInPC, BusMuxInMDR, BusMuxInINPORT, C,
 							 GR_Read, DPout[`HI], DPout[`LO], DPout[`ZHI], DPout[`ZLO], DPout[`PC], DPout[`MDR], DPout[`INPORT], DPout[`C], BusMuxOut );
@@ -136,7 +144,7 @@ endmodule
 module datapath_tb();
 	
 	// Control Signals
-	reg clk, clr;
+	reg clk, clr, CONin;
 	reg Gra, Grb, Grc, Rin, Rout, BAout;
 	
 	// Register Write Control
@@ -156,9 +164,10 @@ module datapath_tb();
 	wire [31:0] MARout; 
 	wire [31:0] OUTPORTout;
 	wire [31:0] BusMuxInMDR;
+	wire CON;
 
 	// Unit Under Test
-	DataPath UUT (clk, clr, Gra, Grb, Grc, Rin, Rout, BAout, DPin, DPout, ALUopp, INPORTin, Mdatain, MARout, OUTPORTout, BusMuxInMDR);
+  DataPath UUT (clk, clr, CONin, Gra, Grb, Grc, Rin, Rout, BAout, DPin, DPout, ALUopp, INPORTin, Mdatain, MARout, OUTPORTout, BusMuxInMDR, CON);
 	
 	// Establishing Clock Behaviour
 	parameter clock_period = 20;
@@ -184,7 +193,7 @@ module datapath_tb();
 		
 		@(posedge clk)
 		//---------Preset R3----------//
-		
+
 		
 		//1011 0001 1
 		load_reg(32'hB180_0000, 32'h22); 
@@ -193,6 +202,7 @@ module datapath_tb();
 		
 		//1011 0011 1
 		load_reg(32'hB380_0000, 32'h24);
+
 	
 		//---------AND R4, R3, R7---------//
 		
@@ -202,6 +212,7 @@ module datapath_tb();
 		T3 ();
 		T4 (`AND);
 		T5 (1'b0); // No HILO
+
 		
 		@(posedge clk)
 		$stop;
@@ -269,7 +280,6 @@ module datapath_tb();
 	task T4 (input [3:0] opp);
 		begin
 			Rout <= 1; Grc <= 1; ALUopp[opp] <= 1; DPin[`Z] <= 1; // Z <- [Y] opp [GR[Grc]]
-			
 			@(posedge clk)
 			Rout <= 0; Grc <= 0; ALUopp[opp] <= 0; DPin[`Z] <= 0;
 		end
