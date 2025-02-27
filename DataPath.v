@@ -55,7 +55,7 @@ module DataPath (
 	/*******Control Signals******/
 
 	input clk, clr, CONin,
-	input Gra, Grb, Grc, Rin, Rout, BAout,
+	input Gra, Grb, Grc, Rin, Rout, BAout, RAM_wr,
 
 	
 	//Register Write Control
@@ -69,11 +69,8 @@ module DataPath (
 	
 	//Input for Disconnected register ends (INPortIn)
 	input  [31:0] INPORTin,
-	input	 [31:0] Mdatain,
 	//Output Disconnected Register ends (IRout, MARout, OUTPORTout)
-	output [31:0] MARout, 
 	output [31:0] OUTPORTout,
-	output [31:0] BusMuxInMDR,
 	output CON
 );
 
@@ -84,6 +81,7 @@ module DataPath (
 	wire [31:0] BusMuxInGR; 
 	wire [31:0] BusMuxInPC;
 	wire [31:0] BusMuxInINPORT;
+	wire [31:0] BusMuxInMDR;
 	wire [31:0] BusMuxInHI;
 	wire [31:0] BusMuxInLO;
 
@@ -93,9 +91,12 @@ module DataPath (
 	wire [63:0] ZtoBusMux;
 	
 	wire [31:0] IRout;
+	wire [31:0] MARout;
 	wire [31:0] C;
 	wire [15:0] GRin;
 	wire [15:0] GRout;
+	
+	wire [31:0] Mdatain;
 
 	wire GR_Read;
 	assign GR_Read = |GRout;
@@ -132,9 +133,13 @@ module DataPath (
 	// ALU
 	ALU DP_ALU 			(YtoA, BusMuxOut, ALUopp, clk, CtoZ);
 	
-	//Select And Encode Module
+	// Select And Encode Module
 	
 	SelectAndEncodeLogic DP_SnEL(IRout, Gra, Grb, Grc, Rin, Rout, BAout, C, GRin, GRout);
+	
+	// RAM
+	
+	ram DP_ram (clk, RAM_wr, MARout[8:0], MARout[8:0], BusMuxInMDR, Mdatain);
 					
 endmodule 
 
@@ -144,7 +149,7 @@ module datapath_tb();
 	
 	// Control Signals
 	reg clk, clr, CONin;
-	reg Gra, Grb, Grc, Rin, Rout, BAout;
+	reg Gra, Grb, Grc, Rin, Rout, BAout, RAM_wr;
 	
 	// Register Write Control
 	reg [15:0] DPin;
@@ -157,16 +162,15 @@ module datapath_tb();
 	
 	// Input for Disconnected register ends (INPortIn)
 	reg [31:0] INPORTin;
-	reg [31:0] Mdatain;
 	// Output Disconnected Register ends (IRout, MARout, OUTPORTout)
 	wire [31:0] IRout; 
 	wire [31:0] MARout; 
 	wire [31:0] OUTPORTout;
-	wire [31:0] BusMuxInMDR;
+
 	wire CON;
 
 	// Unit Under Test
-  DataPath UUT (clk, clr, CONin, Gra, Grb, Grc, Rin, Rout, BAout, DPin, DPout, ALUopp, INPORTin, Mdatain, MARout, OUTPORTout, BusMuxInMDR, CON);
+  DataPath UUT (clk, clr, CONin, Gra, Grb, Grc, Rin, Rout, BAout, RAM_wr, DPin, DPout, ALUopp, INPORTin, OUTPORTout, CON);
 	
 	// Establishing Clock Behaviour
 	parameter clock_period = 20;
@@ -181,13 +185,11 @@ module datapath_tb();
 		// Clear signal
 		clr <= 0;
 		// General Register Signals
-		Gra<= 0; Grb<= 0; Grc<= 0; Rin<= 0; Rout<= 0; BAout<= 0;
+		Gra<= 0; Grb<= 0; Grc<= 0; Rin<= 0; Rout<= 0; BAout<= 0; RAM_wr <= 0;
 		// Register Identifiers: DP = Datapath Register
 		DPin <= 16'b0; DPout <= 16'b0;
 		//ALU Control.
 		ALUopp <= 16'b0;
-		// Memory Data In.
-		Mdatain <= 32'b0;
 		
 		
 		@(posedge clk)
@@ -206,7 +208,7 @@ module datapath_tb();
 		//---------AND R4, R3, R7---------//
 		
 		T0 ();
-		T1 (32'h2A1B8000);
+		T1 ();
 		T2 ();
 		T3 ();
 		T4 (`AND);
@@ -247,14 +249,14 @@ module datapath_tb();
 		end
 	endtask
 	
-	task T1 (input [31:0] op_code);
+	task T1 ();
 		begin
 			DPout[`ZLO] <= 1; DPin[`PC] <= 1; 	// Accept incremented value.
-			DPin[`MDR] <= 1; DPin[`READ] <= 1; Mdatain <= op_code; // MDR <- op_code
+			DPin[`MDR] <= 1; DPin[`READ] <= 1; //Mdatain <= op_code; // MDR <- op_code
 			
 			@(posedge clk)
 			DPout[`ZLO] <= 0; DPin[`PC] <= 0; 	
-			DPin[`MDR] <= 0; DPin[`READ] <= 0; Mdatain <= 32'b0; 
+			DPin[`MDR] <= 0; DPin[`READ] <= 0; //Mdatain <= 32'b0; 
 		end
 	endtask
 	
