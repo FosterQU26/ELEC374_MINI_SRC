@@ -162,11 +162,9 @@ module datapath_tb();
 	
 	// Input for Disconnected register ends (INPortIn)
 	reg [31:0] INPORTin;
-	// Output Disconnected Register ends (IRout, MARout, OUTPORTout)
-	wire [31:0] IRout; 
-	wire [31:0] MARout; 
+	// Output Disconnected Register ends (OUTPORTout)
 	wire [31:0] OUTPORTout;
-
+	//Output for CON
 	wire CON;
 
 	// Unit Under Test
@@ -179,48 +177,60 @@ module datapath_tb();
 		forever #(clock_period/2) clk <= ~clk;
 	end
 	
+	reg [4:0] op_code;
+	
+	//Parame
+	parameter ADD = 5'b00011, SUB = 5'b00100, AND = 5'b00101;
+	
 	initial begin
 		//---------Default Values----------//
-		
-		// Clear signal
-		clr <= 0;
-		// General Register Signals
-		Gra<= 0; Grb<= 0; Grc<= 0; Rin<= 0; Rout<= 0; BAout<= 0; RAM_wr <= 0;
-		// Register Identifiers: DP = Datapath Register
-		DPin <= 16'b0; DPout <= 16'b0;
-		//ALU Control.
-		ALUopp <= 16'b0;
-		
-		
+		init_zeros();
+			
 		@(posedge clk)
-		//---------Preset R3----------//
-
+		//---------Pre-Load Values----------//		
+		load_reg(32'hB180_0000, 32'h22);		//Load R3 with 0x22
 		
-		//1011 0001 1
-		load_reg(32'hB180_0000, 32'h22); 
-		
-		//---------Preset R7----------//
-		
-		//1011 0011 1
-		load_reg(32'hB380_0000, 32'h24);
-
-	
-		//---------AND R4, R3, R7---------//
-		
+		load_reg(32'hB380_0000, 32'h24);		//Load R7 with 0x24
+		//---------Fetch Instruction---------//
 		T0 ();
 		T1 ();
 		T2 ();
-		T3 ();
-		T4 (`AND);
-		T5 (1'b0); // No HILO
-
+		//---------Preform Instruction---------//
+		
+		op_code <= AND; //ADD op_code
+		//Instruciton Case Statement 
+		@(posedge clk)
+		
+		case (op_code)
+		
+			AND: begin
+				ALU_T3();
+				ALU_T4(`AND);
+				ALU_T5();
+			end
+			
+		endcase
 		
 		@(posedge clk)
 		$stop;
 	end
-	
-	//TODO: Make a way to load regs using a Command put into IR since we dont ahve control over GRin/GRout anymore
 
+	//Task for setting all inital values to zero
+	task init_zeros ();
+		begin
+			// Clear signal
+			clr <= 0;
+			// General Register Signals
+			Gra<= 0; Grb<= 0; Grc<= 0; Rin<= 0; Rout<= 0; BAout<= 0; RAM_wr <= 0;
+			// Register Identifiers: DP = Datapath Register
+			DPin <= 16'b0; DPout <= 16'b0;
+			//ALU Control.
+			ALUopp <= 16'b0;
+			//op_code
+			op_code <= 5'b0;
+		end
+	endtask
+	
 	//The Plan: First Use Inport to load value into IR, Then USe inport adn IRtoload into reg
 	task load_reg (input [31:0] op_code, input [31:0] value);
 		begin
@@ -269,7 +279,11 @@ module datapath_tb();
 		end
 	endtask
 	
-	task T3 ();
+	
+	
+	
+	//TODO: From here Each instr will require Its own cycles
+	task ALU_T3 ();
 		begin
 			Rout <= 1; Grb <= 1; DPin[`Y] <= 1; // Y <- [GR[GRb]]
 			
@@ -278,7 +292,7 @@ module datapath_tb();
 		end
 	endtask
 	
-	task T4 (input [3:0] opp);
+	task ALU_T4 (input [3:0] opp);
 		begin
 			Rout <= 1; Grc <= 1; ALUopp[opp] <= 1; DPin[`Z] <= 1; // Z <- [Y] opp [GR[Grc]]
 			@(posedge clk)
@@ -286,27 +300,37 @@ module datapath_tb();
 		end
 	endtask
 	
-	task T5 (input HILO);
+	task ALU_T4_long (input [3:0] opp);
 		begin
-			DPout[`ZLO] <= 1; 
-			if (HILO)
-				DPin[`LO] <= 1;
-			else
-				Rin <= 1; Gra <= 1; // GR[Gra] <- [ZLO]
-			
-			@(posedge clk)
-			DPout[`ZLO] <= 0; Rin <= 0; Grc <= 0; DPin[`LO] <= 0;
+			Rout <= 1; Grc <= 1; ALUopp[opp] <= 1; DPin[`Z] <= 1; // Z <- [Y] opp [GR[Grc]]
+			repeat (34)	
+				@(posedge clk)
+			Rout <= 0; Grc <= 0; ALUopp[opp] <= 0; DPin[`Z] <= 0;
 		end
 	endtask
 	
-	task T6 ();
+	task ALU_T5 ();
+		begin
+			DPout[`ZLO] <= 1;	Rin <= 1; Gra <= 1; // GR[Gra] <- [ZLO]
+			@(posedge clk)
+			DPout[`ZLO] <= 0; Rin <= 0; Gra <= 0; 
+		end
+	endtask
+	
+	task HILO_T5();
+		begin
+			DPout[`ZLO] <= 1;	DPin[`LO] <= 1;
+			@(posedge clk)
+			DPout[`ZLO] <= 0;	DPin[`LO] <= 0;
+		end
+	endtask
+	
+	task HILO_T6 ();
 		begin
 			DPout[`ZHI] <= 1; DPin[`HI] <= 1;
-			
 			@(posedge clk)
 			DPout[`ZHI] <= 0; DPin[`HI] <= 0;
 		end
 	endtask
-	
 	
 endmodule
