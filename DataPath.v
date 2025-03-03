@@ -180,67 +180,52 @@ module datapath_tb();
 	reg [4:0] op_code;
 	reg [15:0] alu_code;
 	
-	//Parame
 	parameter ADD = 5'b00011, SUB = 5'b00100, AND = 5'b00101, OR = 5'b00110, ROR = 5'b00111, ROL = 5'b01000, SHR = 5'b01001, SHRA = 5'b01010, SHL = 5'b01011,
 				 ADDI = 5'b01100, ANDI = 5'b01101, ORI = 5'b01110, DIV = 5'b01111, MUL = 5'b10000, NEG = 5'b10001, NOT = 5'b10010,
 				 NOP = 5'b11010, HALT = 5'b11011;
 	
 	initial begin
-		//---------Default Values----------//
+	//---------Default Values----------//
 		init_zeros();				
 		
 		@(posedge clk)
 		
-		//---------Pre-Load Values----------//		
+	//---------Pre-Load Values----------//		
 		load_reg(32'hB180_0000, 32'h22);		//Load R3 with 0x22
 		
 		load_reg(32'hB380_0000, 32'h24);		//Load R7 with 0x24
-		//---------Specify Instr-----------//
+	//---------Specify Instr-----------//
+		
 		op_code = DIV;
 		alu_code = op_to_alu (op_code);
-		//---------Fetch Instruction---------//
-		T0 ();
-		T1 ();
-		T2 ();
+		
+	//---------Fetch Instruction---------//
+		fetch_instr ();
 		
 		@(posedge clk)
 		
-		//---------Preform Instruction---------//		
+	//---------Preform Instruction---------//		
 		case (op_code)
 		
-			ADD, SUB, AND, OR, ROR, ROL, SHR, SHRA, SHL: begin
-				ALU_T3();
-				ALU_T4(alu_code);
-				ALU_T5();
-			end
-			ADDI, ANDI, ORI: begin
-				ALU_T3();
-				ALU_T4_imm(alu_code);
-				ALU_T5();
-			end
-			MUL: begin
-				ALU_T3_mul_div ();
-				ALU_T4_mul (alu_code);
-				ALU_T5_mul_div ();
-				ALU_T6_mul_div ();
-			end
-			DIV: begin
-				ALU_T3_mul_div ();
-				ALU_T4_div (alu_code);
-				ALU_T5_mul_div ();
-				ALU_T6_mul_div ();			
-			end
-			NEG, NOT: begin
-				ALU_T4_neg_not (alu_code);
-				ALU_T5();
-			end
+			ADD, SUB, AND, OR, ROR, ROL, SHR, SHRA, SHL: ALU (alu_code);
 			
+			ADDI, ANDI, ORI: ALU_imm (alu_code);
+			
+			MUL: ALU_mul (alu_code);
+			
+			DIV: ALU_div (alu_code);
+			
+			NEG, NOT: ALU_neg_not (alu_code);
+			
+			default: $stop;
 			
 		endcase
-		
+	//-------End of Simulation--------//
 		@(posedge clk)
 		$stop;
 	end
+
+	//------Functions-------//
 	
 	//Convert from the 5-bit machine op_code to the 16-bit bus used to control the ALU
 	function [15:0] op_to_alu (input [4:0] op_code);
@@ -264,18 +249,15 @@ module datapath_tb();
 		end
 	endfunction
 	
+	//--------General Tasks-------------//
+	
 	//Set inital state of the CPU to zeros
 	task init_zeros ();
 		begin
-			// Clear signal
 			clr <= 0;
-			// General Register Signals
 			Gra<= 0; Grb<= 0; Grc<= 0; Rin<= 0; Rout<= 0; BAout<= 0; RAM_wr <= 0;
-			// Register Identifiers: DP = Datapath Register
 			DPin <= 16'b0; DPout <= 16'b0;
-			//ALU Control.
 			ALUopp <= 16'b0;
-			//op_code
 			op_code <= 5'b0; alu_code <= 16'b0;
 		end
 	endtask
@@ -301,115 +283,118 @@ module datapath_tb();
 	endtask
 	
 	//T0 - T2 Cycles are used to fetch instructions from memory into the IR
-	task T0 ();
+	task fetch_instr ();
 		begin
-			DPout[`PC] <= 1; DPin[`MAR] <= 1; ALUopp[`INC] <= 1; DPin[`Z] <= 1; // MAR <- [PC], PC <- [PC] + 1
+			//T0
+			DPout[`PC] <= 1; DPin[`MAR] <= 1; ALUopp[`INC] <= 1; DPin[`Z] <= 1;
 			@(posedge clk)
 			DPout[`PC] <= 0; DPin[`MAR] <= 0; ALUopp[`INC] <= 0; DPin[`Z] <= 0;
-		end
-	endtask
-	
-	task T1 ();
-		begin
-			DPout[`ZLO] <= 1; DPin[`PC] <= 1; 	// Accept incremented value.
-			DPin[`MDR] <= 1; DPin[`READ] <= 1; //Mdatain <= op_code; // MDR <- op_code
-			
+			//T1
+			DPout[`ZLO] <= 1; DPin[`PC] <= 1;
+			DPin[`MDR] <= 1; DPin[`READ] <= 1; 
 			@(posedge clk)
 			DPout[`ZLO] <= 0; DPin[`PC] <= 0; 	
-			DPin[`MDR] <= 0; DPin[`READ] <= 0; //Mdatain <= 32'b0; 
-		end
-	endtask
-	
-	task T2 ();
-		begin
-			DPout[`MDR] <= 1; DPin[`IR] <= 1; // IR <- [MDR] (op_code)
-			
+			DPin[`MDR] <= 0; DPin[`READ] <= 0; 
+			//T2
+			DPout[`MDR] <= 1; DPin[`IR] <= 1;
 			@(posedge clk)
 			DPout[`MDR] <= 0; DPin[`IR] <= 0;
 		end
 	endtask
 	
 	//-------ALU tasks-------//
-
-	task ALU_T3 			();
+	
+	//General ALU used for most ALU opperations
+	task ALU (input [15:0] alu_code);
 		begin
-			Rout <= 1; Grb <= 1; DPin[`Y] <= 1; // Y <- [GR[GRb]]
-			
+			//T3
+			Rout <= 1; Grb <= 1; DPin[`Y] <= 1;
 			@(posedge clk)
 			Rout <= 0; Grb <= 0; DPin[`Y] <= 0;
-		end
-	endtask
-	
-	task ALU_T3_mul_div 	();
-		begin
-			Rout <= 1; Gra <= 1; DPin[`Y] <= 1; // Y <- [GR[GRb]]
-			
-			@(posedge clk)
-			Rout <= 0; Gra <= 0; DPin[`Y] <= 0;
-		end
-	endtask	
-	
-	task ALU_T4 			(input [15:0] alu_code);
-		begin
-			Rout <= 1; Grc <= 1; ALUopp <= alu_code; DPin[`Z] <= 1; // Z <- [Y] opp [GR[Grc]]
+			//T4
+			Rout <= 1; Grc <= 1; ALUopp <= alu_code; DPin[`Z] <= 1;
 			@(posedge clk)
 			Rout <= 0; Grc <= 0; ALUopp <= 16'b0; DPin[`Z] <= 0;
-		end
-	endtask
-	
-	task ALU_T4_mul 		(input [15:0] alu_code);
-		begin
-			Rout <= 1; Grb <= 1; ALUopp <= alu_code; DPin[`Z] <= 1; // Z <- [Y] opp [GR[Grc]]
-			@(posedge clk)
-			Rout <= 0; Grb <= 0; ALUopp <= 16'b0; DPin[`Z] <= 0;
-		end
-	endtask
-	
-	task ALU_T4_div 		(input [15:0] alu_code);
-		begin
-			Rout <= 1; Grb <= 1; ALUopp <= alu_code; DPin[`Z] <= 1; // Z <- [Y] opp [GR[Grc]]
-			repeat (34)	@(posedge clk)
-			Rout <= 0; Grb <= 0; ALUopp <= 16'b0; DPin[`Z] <= 0;
-		end
-	endtask
-	
-	task ALU_T4_imm 		(input [15:0] alu_code);
-		begin
-			DPout[`C] <= 1; ALUopp <= alu_code; DPin[`Z] <= 1; // Z <- [Y] Sign Extended C
-			@(posedge clk)
-			DPout[`C] <= 0; ALUopp <= 16'b0; DPin[`Z] <= 0;
-		end
-	endtask
-	
-	task ALU_T4_neg_not 	(input [15:0] alu_code);
-		begin
-			Rout <= 1; Grb <= 1; ALUopp <= alu_code; DPin[`Z] <= 1; // Z <- [Y] opp [GR[Grc]]
-			@(posedge clk)
-			Rout <= 0; Grb <= 0; ALUopp <= 16'b0; DPin[`Z] <= 0;
-		end
-	endtask
-	
-	task ALU_T5 			();
-		begin
-			DPout[`ZLO] <= 1;	Rin <= 1; Gra <= 1; // GR[Gra] <- [ZLO]
+			//T5
+			DPout[`ZLO] <= 1;	Rin <= 1; Gra <= 1;
 			@(posedge clk)
 			DPout[`ZLO] <= 0; Rin <= 0; Gra <= 0; 
 		end
 	endtask
 	
-	task ALU_T5_mul_div 	();
+	//Used for ALU opperations that involve a Immediate value from IR
+	task ALU_imm (input [15:0] alu_code);
 		begin
-			DPout[`ZLO] <= 1;	DPin[`LO] <= 1;
+			//T3
+			Rout <= 1; Grb <= 1; DPin[`Y] <= 1;
 			@(posedge clk)
-			DPout[`ZLO] <= 0;	DPin[`LO] <= 0;
+			Rout <= 0; Grb <= 0; DPin[`Y] <= 0;
+			//T4
+			DPout[`C] <= 1; ALUopp <= alu_code; DPin[`Z] <= 1;
+			@(posedge clk)
+			DPout[`C] <= 0; ALUopp <= 16'b0; DPin[`Z] <= 0;
+			//T5
+			DPout[`ZLO] <= 1;	Rin <= 1; Gra <= 1;
+			@(posedge clk)
+			DPout[`ZLO] <= 0; Rin <= 0; Gra <= 0; 
 		end
 	endtask
 	
-	task ALU_T6_mul_div 	();
+	//Used for the mulitplicaiton opperation
+	task ALU_mul (input [15:0] alu_code);
 		begin
+			//T3
+			Rout <= 1; Gra <= 1; DPin[`Y] <= 1;
+			@(posedge clk)
+			Rout <= 0; Gra <= 0; DPin[`Y] <= 0;
+			//T4
+			Rout <= 1; Grb <= 1; ALUopp <= alu_code; DPin[`Z] <= 1; 
+			@(posedge clk)
+			Rout <= 0; Grb <= 0; ALUopp <= 16'b0; DPin[`Z] <= 0;
+			//T5
+			DPout[`ZLO] <= 1;	DPin[`LO] <= 1;
+			@(posedge clk)
+			DPout[`ZLO] <= 0;	DPin[`LO] <= 0;
+			//T6
 			DPout[`ZHI] <= 1; DPin[`HI] <= 1;
 			@(posedge clk)
 			DPout[`ZHI] <= 0; DPin[`HI] <= 0;
+		end
+	endtask
+	
+	//USed for the division opperation
+	task ALU_div (input [15:0] alu_code);
+		begin
+			//T3
+			Rout <= 1; Gra <= 1; DPin[`Y] <= 1;
+			@(posedge clk)
+			Rout <= 0; Gra <= 0; DPin[`Y] <= 0;
+			//T4
+			Rout <= 1; Grb <= 1; ALUopp <= alu_code; DPin[`Z] <= 1;
+			repeat (34)	@(posedge clk)
+			Rout <= 0; Grb <= 0; ALUopp <= 16'b0; DPin[`Z] <= 0;
+			//T5
+			DPout[`ZLO] <= 1;	DPin[`LO] <= 1;
+			@(posedge clk)
+			DPout[`ZLO] <= 0;	DPin[`LO] <= 0;
+			//T6
+			DPout[`ZHI] <= 1; DPin[`HI] <= 1;
+			@(posedge clk)
+			DPout[`ZHI] <= 0; DPin[`HI] <= 0;
+		end
+	endtask
+	
+	//Used for single argument ALU operation such as neg/not
+	task ALU_neg_not (input [15:0] alu_code);
+		begin
+			//T3
+			Rout <= 1; Grb <= 1; ALUopp <= alu_code; DPin[`Z] <= 1;
+			@(posedge clk)
+			Rout <= 0; Grb <= 0; ALUopp <= 16'b0; DPin[`Z] <= 0;
+			//T4
+			DPout[`ZLO] <= 1;	Rin <= 1; Gra <= 1;
+			@(posedge clk)
+			DPout[`ZLO] <= 0; Rin <= 0; Gra <= 0; 
 		end
 	endtask
 	
