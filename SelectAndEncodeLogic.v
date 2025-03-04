@@ -15,7 +15,7 @@ module SelectAndEncodeLogic (
 
 );
 
-parameter tmp = 16'b0000_0000_0000_0001;
+parameter tmp = 16'b1;
 
 // Sign extend C by Fanning IR[18] to IR[31:18]
 assign C = {{14{IR[18]}} , IR[17:0]};

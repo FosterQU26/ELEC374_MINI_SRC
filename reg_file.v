@@ -1,8 +1,7 @@
 
 /* 
-	Modular 2^depth x width register file with 2 read ports and 1 write port.
-	Read port 1 accesses r_data1 according to address r_addr1.
-	Read port 2 accesses r_data2 according to address r_addr2.
+	Modular 2^depth x width register file with 1 read port and 1 write port.
+	Read port accesses r_data according to address r_addr.
 	The single write port writes w_data to address w_addr.
 */
 

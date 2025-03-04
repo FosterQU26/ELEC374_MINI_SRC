@@ -58,26 +58,26 @@ module DataPath (
 	input Gra, Grb, Grc, Rin, Rout, BAout, RAM_wr,
 
 	
-	//Register Write Control
+	// Register Write Control
 	input	[15:0] DPin,
 	
-	//Register Read Control
+	// Register Read Control
 	input	[15:0] DPout,
 	
-	//ALU Control
+	// ALU Control
 	input [15:0] ALUopp,
 	
-	//Input for Disconnected register ends (INPortIn)
+	// Input for Disconnected register ends (INPortIn)
 	input  [31:0] INPORTin,
-	//Output Disconnected Register ends (IRout, MARout, OUTPORTout)
+	// Output Disconnected Register ends (IRout, MARout, OUTPORTout)
 	output [31:0] OUTPORTout,
 	output CON
 );
 
-
+	// Output from Bus
 	wire [31:0] BusMuxOut;
 
-
+	// Inputs to Bus
 	wire [31:0] BusMuxInGR; 
 	wire [31:0] BusMuxInPC;
 	wire [31:0] BusMuxInINPORT;
@@ -121,10 +121,7 @@ module DataPath (
 		defparam Z.DATA_WIDTH_IN = 64,
 					Z.DATA_WIDTH_OUT = 64;
 	
-	wire [1:0] IR_20_19;
-	assign IR_20_19 = IRout[20:19];
-
-	conditional_ff_logic CON_FF (IR_20_19, BusMuxOut, CONin, clk, CON);
+	conditional_ff_logic CON_FF (IRout[20:19], BusMuxOut, CONin, clk, CON);
 	
 	// Bus	
 	Bus DataPathBus 	(BusMuxInGR, BusMuxInHI, BusMuxInLO, ZtoBusMux[63:32], ZtoBusMux[31:0], BusMuxInPC, BusMuxInMDR, BusMuxInINPORT, C,
@@ -138,7 +135,6 @@ module DataPath (
 	SelectAndEncodeLogic DP_SnEL(IRout, Gra, Grb, Grc, Rin, Rout, BAout, C, GRin, GRout);
 	
 	// RAM
-	
 	ram DP_ram (clk, RAM_wr, MARout[8:0], MARout[8:0], BusMuxInMDR, Mdatain);
 					
 endmodule 
@@ -182,6 +178,7 @@ module datapath_tb();
 	
 	parameter ADD = 5'b00011, SUB = 5'b00100, AND = 5'b00101, OR = 5'b00110, ROR = 5'b00111, ROL = 5'b01000, SHR = 5'b01001, SHRA = 5'b01010, SHL = 5'b01011,
 				 ADDI = 5'b01100, ANDI = 5'b01101, ORI = 5'b01110, DIV = 5'b01111, MUL = 5'b10000, NEG = 5'b10001, NOT = 5'b10010,
+				 BR = 5'b10011, JAL = 5'b10100, JR = 5'b10101, IN = 5'b10110, OUT = 5'b10111, MFLO = 5'b11000, MFHI = 5'b11011,
 				 NOP = 5'b11010, HALT = 5'b11011;
 	
 	initial begin
@@ -190,19 +187,18 @@ module datapath_tb();
 		
 		@(posedge clk)
 		
-	//---------Pre-Load Values----------//		
-		load_reg(32'hB180_0000, 32'h22);		//Load R3 with 0x22
-		
-		load_reg(32'hB380_0000, 32'h24);		//Load R7 with 0x24
+	//---------Pre-Load Values----------//
+		load_pc(32'h9);
+		load_reg(32'h0280_0000, 32'h3);		// Load R5
+		load_reg(32'h0400_0000, 32'hFFFFF00A);		// Load R8
+	
 	//---------Specify Instr-----------//
 		
-		op_code = DIV;
+		op_code = JAL;
 		alu_code = op_to_alu (op_code);
 		
 	//---------Fetch Instruction---------//
 		fetch_instr ();
-		
-		@(posedge clk)
 		
 	//---------Preform Instruction---------//		
 		case (op_code)
@@ -216,6 +212,12 @@ module datapath_tb();
 			DIV: ALU_div (alu_code);
 			
 			NEG, NOT: ALU_neg_not (alu_code);
+			
+			BR: BRANCH();
+			
+			JAL: JAL_T();
+			
+			JR: JR_T();
 			
 			default: $stop;
 			
@@ -255,17 +257,17 @@ module datapath_tb();
 	task init_zeros ();
 		begin
 			clr <= 0;
-			Gra<= 0; Grb<= 0; Grc<= 0; Rin<= 0; Rout<= 0; BAout<= 0; RAM_wr <= 0;
+			Gra<= 0; Grb<= 0; Grc<= 0; Rin<= 0; Rout<= 0; BAout<= 0; RAM_wr <= 0; CONin <= 0;
 			DPin <= 16'b0; DPout <= 16'b0;
 			ALUopp <= 16'b0;
 			op_code <= 5'b0; alu_code <= 16'b0;
 		end
 	endtask
 	
-	//Pre-Load a value into a register, op_code must specify the register in the Ra slot
-	task load_reg (input [31:0] op_code, input [31:0] value);
+	//Pre-Load a value into a register, machine_code must specify the register in the Ra slot
+	task load_reg (input [31:0] machine_code, input [31:0] value);
 		begin
-			INPORTin <= op_code; DPin[`INPORT] <= 1;
+			INPORTin <= machine_code; DPin[`INPORT] <= 1;
 		
 			@(posedge clk)
 			
@@ -273,7 +275,7 @@ module datapath_tb();
 			DPout[`INPORT] <= 1; DPin[`IR] <= 1;
 			
 			@(posedge clk)
-			INPORTin <= 32'b0; DPin[`INPORT] <= 0;
+			INPORTin <= 32'b0; DPin[`INPORT] <= 0; DPin[`IR] <= 0;
 			DPout[`INPORT] <= 1; Gra <= 1; Rin <= 1;
 			
 			@(posedge clk)
@@ -281,6 +283,22 @@ module datapath_tb();
 			
 		end
 	endtask
+	
+	// Pre-load a value into PC
+	task load_pc (input [31:0] value);
+		begin
+			INPORTin <= value; DPin[`INPORT] <= 1;
+		
+			@(posedge clk)
+			
+			INPORTin <= 32'b0; DPin[`INPORT] <= 0;
+			DPout[`INPORT] <= 1; DPin[`PC] <= 1;
+			
+			@(posedge clk)
+			DPout[`INPORT] <= 0; DPin[`PC] <= 0;
+		end
+	endtask
+	
 	
 	//T0 - T2 Cycles are used to fetch instructions from memory into the IR
 	task fetch_instr ();
@@ -398,6 +416,55 @@ module datapath_tb();
 		end
 	endtask
 	
-	//-------More Tasks Here-------//
+	//-------BRANCH AND JUMP INSTRUCTIONS-------//
+	task BRANCH();
+		begin
+			// T3
+			Gra <= 1; Rout <= 1; CONin <= 1;
+			@(posedge clk)
+			Gra <= 0; Rout <= 0; CONin <= 0;
+			
+			#1;
+			if (CON) begin
+				// T4
+				DPout[`PC] <= 1; DPin[`Y] <= 1;
+				@(posedge clk)
+				DPout[`PC] <= 0; DPin[`Y] <= 0;
+				
+				// T5
+				DPout[`C] <= 1; ALUopp[`ADD] <= 1; DPin[`Z] <= 1;
+				@(posedge clk)
+				DPout[`C] <= 0; ALUopp[`ADD] <= 0; DPin[`Z] <= 0;
+				
+				// T6
+				DPout[`ZLO] <= 1; DPin[`PC] <= 1;
+				@(posedge clk)
+				DPout[`Z] <= 0; DPin[`PC] <= 0;
+			end
+		end
+	endtask
+	
+	task JAL_T();
+		begin
+			// T3
+			DPout[`PC] <= 1; Rin <= 1; Grb <= 1; // NEED TO MAKE SURE 4'b1000 IS IN GRB SLOT??
+			@(posedge clk)
+			DPout[`PC] <= 0; Rin <= 0; Grb <= 0; 
+			
+			// T4
+			Rout <= 1; Gra <= 1; DPin[`PC] <= 1;
+			@(posedge clk)
+			Rout <= 0; Gra <= 0; DPin[`PC] <= 0;
+		end
+	endtask
+	
+	task JR_T();
+		begin
+			// T3
+			DPin[`PC] <= 1; Rout <= 1; Gra <= 1;
+			@(posedge clk)
+			DPin[`PC] <= 0; Rout <= 0; Gra <= 0; 
+		end
+	endtask
 	
 endmodule

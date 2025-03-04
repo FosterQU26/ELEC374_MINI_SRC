@@ -13,7 +13,8 @@ module conditional_ff_logic (
 	
 	assign CON_D = (IR_20_19 == 2'b00) && bus_zero || (IR_20_19 == 2'b01) && !bus_zero 
 		|| (IR_20_19 == 2'b10) && !bus_neg || (IR_20_19 == 2'b11) && bus_neg;
-		
+	
+	initial CON <= 1'b0;
 	always @(posedge clk) if (CONin) CON <= CON_D;
 
 endmodule
