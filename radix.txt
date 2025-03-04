@@ -22,6 +22,7 @@ add wave -position end  sim:/datapath_tb/UUT/LO/q
 add wave -position end  sim:/datapath_tb/UUT/Z/q
 add wave -position end  sim:/datapath_tb/UUT/DP_ram/memory_array
 add wave -position end  sim:/datapath_tb/UUT/BusMuxOut
+add wave -position end  sim:/datapath_tb/UUT/CON
 
 radix define opcode {
     1       "ADD"
@@ -58,5 +59,6 @@ radix define reg_ids {
     4096    "READ"
     4112    "READ & MDR"  ;# 4096 (READ) | 16 (MDR) = 4112
     4113    "READ & MDR & PC"
+    8192    "C"
     default "UNKNOWN"
 }
