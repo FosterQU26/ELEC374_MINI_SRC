@@ -59,5 +59,6 @@ radix define reg_ids {
     4096    "READ"
     4112    "READ & MDR"  ;# 4096 (READ) | 16 (MDR) = 4112
     4113    "READ & MDR & PC"
+    8192    "C"
     default "UNKNOWN"
 }
