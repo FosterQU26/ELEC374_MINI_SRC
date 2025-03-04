@@ -22,6 +22,7 @@ add wave -position end  sim:/datapath_tb/UUT/LO/q
 add wave -position end  sim:/datapath_tb/UUT/Z/q
 add wave -position end  sim:/datapath_tb/UUT/DP_ram/memory_array
 add wave -position end  sim:/datapath_tb/UUT/BusMuxOut
+add wave -position end  sim:/datapath_tb/UUT/CON
 
 radix define opcode {
     1       "ADD"
