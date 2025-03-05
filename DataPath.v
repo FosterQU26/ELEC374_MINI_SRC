@@ -190,11 +190,13 @@ module datapath_tb();
 		
 	//---------Pre-Load Values----------//
 		
-		load_reg(32'h0180_0000, 32'hB6);		// Load R2
+		load_reg(32'h0300_0000, 32'hFF00);		// Load R6
+		
+		load_reg(32'h0280_0000, 32'hBEEF);		// Load R5
 	
 	//---------Specify Instr-----------//
 		
-		op_code = ST;
+		op_code = ORI;
 		alu_code = op_to_alu (op_code);
 		
 	//---------Fetch Instruction---------//
