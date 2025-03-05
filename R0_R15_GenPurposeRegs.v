@@ -10,7 +10,7 @@
 	Therefore, in all instantiations of this module, signals like 'rXin' are grouped as a single vector GRin.
 	Similarly, signals like 'rXout' are grouped as a single vector GRout.
 	
-	Furthermore, this module incorporates two read ports in case we opt for a 3-bus design at a later phase.
+	The R0 register has additional function added to it to allow BAout to select all zeros
 */
 
 module R0_R15_GenPurposeRegs #(

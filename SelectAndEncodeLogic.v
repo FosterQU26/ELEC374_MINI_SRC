@@ -1,6 +1,7 @@
 /* 
 	Select and Encode Logic Block, Encodes the Ra, Rb and Rc signals from IR
-	Also Provides a Sign-Extended C to the DataPath
+	GRout and GRin outputs are selected using the signals Rin, Rout and BAout
+	Also Provides a Sign-Extended C to the DataPath Bus
 */
 
 
@@ -48,7 +49,7 @@ assign GRout = GRsignal & {16{Rout|BAout}};
 endmodule
 
 
-// Select and Encode Testbench
+//--------Select and Encode Testbench--------//
 
 module SelectAndEncodeLogic_TB ();
 
