@@ -176,7 +176,8 @@ module datapath_tb();
 	reg [4:0] op_code;
 	reg [15:0] alu_code;
 	
-	parameter ADD = 5'b00011, SUB = 5'b00100, AND = 5'b00101, OR = 5'b00110, ROR = 5'b00111, ROL = 5'b01000, SHR = 5'b01001, SHRA = 5'b01010, SHL = 5'b01011,
+	parameter LD = 5'b00000, LDI = 5'b00001, ST = 5'b00010,
+				 ADD = 5'b00011, SUB = 5'b00100, AND = 5'b00101, OR = 5'b00110, ROR = 5'b00111, ROL = 5'b01000, SHR = 5'b01001, SHRA = 5'b01010, SHL = 5'b01011,
 				 ADDI = 5'b01100, ANDI = 5'b01101, ORI = 5'b01110, DIV = 5'b01111, MUL = 5'b10000, NEG = 5'b10001, NOT = 5'b10010,
 				 BR = 5'b10011, JAL = 5'b10100, JR = 5'b10101, IN = 5'b10110, OUT = 5'b10111, MFLO = 5'b11000, MFHI = 5'b11011,
 				 NOP = 5'b11010, HALT = 5'b11011;
@@ -188,13 +189,12 @@ module datapath_tb();
 		@(posedge clk)
 		
 	//---------Pre-Load Values----------//
-		load_pc(32'h9);
-		load_reg(32'h0280_0000, 32'h3);		// Load R5
-		load_reg(32'h0400_0000, 32'hFFFFF00A);		// Load R8
+		
+		load_reg(32'h0180_0000, 32'hB6);		// Load R2
 	
 	//---------Specify Instr-----------//
 		
-		op_code = JAL;
+		op_code = ST;
 		alu_code = op_to_alu (op_code);
 		
 	//---------Fetch Instruction---------//
@@ -218,6 +218,12 @@ module datapath_tb();
 			JAL: JAL_T();
 			
 			JR: JR_T();
+			
+			LD: LOAD();
+			
+			LDI: LOAD_imm();
+			
+			ST: STORE();
 			
 			default: $stop;
 			
@@ -467,4 +473,85 @@ module datapath_tb();
 		end
 	endtask
 	
+	//-------Load and Store Tasks-------//
+	task LOAD();
+		begin
+			//T3
+			Grb <= 1; BAout <= 1; DPin[`Y] <= 1;
+			@(posedge clk)
+			Grb <= 0; BAout <= 0; DPin[`Y] <= 0;
+
+			//T4      
+			DPout[`C] <= 1; ALUopp[`ADD] <= 1; DPin[`Z] <= 1;
+			@(posedge clk)
+			DPout[`C] <= 0; ALUopp[`ADD] <= 0; DPin[`Z] <= 0;
+
+			//T5       
+			DPout[`ZLO] <= 1; DPin[`MAR] <= 1;
+			@(posedge clk)
+			DPout[`ZLO] <= 0; DPin[`MAR] <= 0;
+
+			//T6
+			DPin[`MDR] <= 1; DPin[`READ] <= 1;
+			@(posedge clk)
+			DPin[`MDR] <= 0; DPin[`READ] <= 0;  
+
+			//T7
+			DPout[`MDR] <= 1; Gra <= 1; Rin <= 1;
+			@(posedge clk)
+			DPout[`MDR] <= 0; Gra <= 0; Rin <= 0;
+
+		end
+	endtask
+
+	task LOAD_imm();
+		begin
+			// T3  
+			Grb <= 1; BAout <= 1; DPin[`Y] <= 1;
+			@(posedge clk)
+			Grb <= 0; BAout <= 0; DPin[`Y] <= 0;
+
+			//T4        
+			DPout[`C] <= 1; ALUopp[`ADD] <= 1; DPin[`Z] <= 1;
+			@(posedge clk)
+			DPout[`C] <= 0; ALUopp[`ADD] <= 0; DPin[`Z] <= 0;
+
+			//T5
+			DPout[`ZLO] <= 1; Gra <= 1; Rin <= 1;
+			@(posedge clk)
+			DPout[`ZLO] <= 0; Gra <= 0; Rin <= 0;
+
+			end
+	endtask
+
+	task STORE();
+		begin
+			//T3
+			Grb <= 1; BAout <= 1; DPin[`Y] <= 1;
+			@(posedge clk)
+			Grb <= 0; BAout <= 0; DPin[`Y] <= 0;
+			
+			//T4
+			DPout[`C] <= 1; ALUopp[`ADD] <= 1; DPin[`Z] <= 1;
+			@(posedge clk)
+			DPout[`C] <= 0; ALUopp[`ADD] <= 0; DPin[`Z] <= 0;
+
+			//T5
+			DPout[`ZLO] <= 1; DPin[`MAR] <= 1;
+			@(posedge clk)
+			DPout[`ZLO] <= 0; DPin[`MAR] <= 0;
+
+			//T6
+			DPin[`MDR] <= 1; Gra <= 1; Rout <= 1;
+			@(posedge clk)
+			DPin[`MDR] <= 0; Gra <= 0; Rout <= 0;
+
+			//T7
+			RAM_wr <= 1;
+			@(posedge clk)
+			RAM_wr <= 0;
+
+		end
+	endtask
+
 endmodule
