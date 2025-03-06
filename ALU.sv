@@ -63,7 +63,7 @@ module ALU (
 	reg [31:0] shift_result;
 	always @(*) begin
 		shift_result = x;
-		if (ALUopp[`SLL]) begin
+		if (ALUopp[`SLL]) begin // Barrel shift left
 			if (y[4]) shift_result = shift_result << 16;
 			if (y[3]) shift_result = shift_result << 8;
 			if (y[2]) shift_result = shift_result << 4;
@@ -71,7 +71,7 @@ module ALU (
 			if (y[0]) shift_result = shift_result << 1;
 		end
 		else 
-		if (ALUopp[`SRL]) begin
+		if (ALUopp[`SRL]) begin // Barrel shift right
 			if (y[4]) shift_result = shift_result >> 16;
 			if (y[3]) shift_result = shift_result >> 8;
 			if (y[2]) shift_result = shift_result >> 4;
@@ -79,7 +79,7 @@ module ALU (
 			if (y[0]) shift_result = shift_result >> 1;
 		end
 		else
-		if (ALUopp[`SRA]) begin
+		if (ALUopp[`SRA]) begin // Barrel shift right arithmetic (>>>)
 			if (y[4]) shift_result = shift_result >>> 16;
 			if (y[3]) shift_result = shift_result >>> 8;
 			if (y[2]) shift_result = shift_result >>> 4;
@@ -87,7 +87,7 @@ module ALU (
 			if (y[0]) shift_result = shift_result >>> 1;
 		end
 		else
-		if (ALUopp[`ROR]) begin
+		if (ALUopp[`ROR]) begin // Barrel rotate right
 			if (y[4]) shift_result = {shift_result[15:0], shift_result[31:16]};
 			if (y[3]) shift_result = {shift_result[7:0], shift_result[31:8]};
 			if (y[2]) shift_result = {shift_result[3:0], shift_result[31:4]};
@@ -95,7 +95,7 @@ module ALU (
 			if (y[0]) shift_result = {shift_result[0], shift_result[31:1]};
 		end
 		else
-		if (ALUopp[`ROL]) begin
+		if (ALUopp[`ROL]) begin // Barrel rotate left
 			if (y[4]) shift_result = {shift_result[15:0], shift_result[31:16]};
 			if (y[3]) shift_result = {shift_result[23:0], shift_result[31:24]};
 			if (y[2]) shift_result = {shift_result[27:0], shift_result[31:28]};
@@ -105,7 +105,7 @@ module ALU (
 	
 	end
 	
-	// Choose ALU Operation of interest
+	// Choose ALU Operation of interest, based on control signal ALUopp.
 	
 	always @(*) begin
 		if (ALUopp[`ADD] | ALUopp[`SUB] | ALUopp[`NEG] | ALUopp[`INC])

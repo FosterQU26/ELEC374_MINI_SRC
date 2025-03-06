@@ -1,6 +1,6 @@
 /*
-	DataPath.v stands as the top-level module, instantiating all registers and the ALU.
-	For Phase 1 purposes, all control signals are *simulated* to validate the correctness of datapath operations.
+	DataPath.v stands as the top-level module, instantiating all registers, the ALU, the Bus, and Memory.
+	For Phase 1/2 purposes, all control signals are simulated to validate the correctness of datapath operations.
 */
 
 `timescale 1ns / 1ps
@@ -13,11 +13,30 @@
 	
 	All register and operation IDs are associated their own indices. This is achieved with the following const. definitions.
 	
-	Enable signals for general purpose registers (like 'rXin') are grouped under GRin (One-Hot-Encoded).
-	Enable signals for datapath registers (like 'PCin', 'IRin', 'MARin', 'MDRin', etc.) are grouped under DPin (One-Hot-Encoded).
-	Read signals for general purpose registers (like 'rXout') are grouped under GRout (One-Hot-Encoded).
-	Read signals for datapath registers (like 'PCout', 'IRout', 'MARout', 'MDRout', etc.) are grouped under DPout (One-Hot-Encoded).
-	ALU control signals (like 'add', 'sub', etc.) are grouped under ALUopp (One-Hot-Encoded).
+	- Enable signals for general purpose registers (like 'rXin') are grouped under GRin (One-Hot-Encoded).
+	- Enable signals for datapath registers (like 'PCin', 'IRin', 'MARin', 'MDRin', etc.) are grouped under DPin (One-Hot-Encoded).
+	- Read signals for general purpose registers (like 'rXout') are grouped under GRout (One-Hot-Encoded).
+	- Read signals for datapath registers (like 'PCout', 'IRout', 'MARout', 'MDRout', etc.) are grouped under DPout (One-Hot-Encoded).
+	- ALU control signals (like 'add', 'sub', etc.) are grouped under ALUopp (One-Hot-Encoded).
+*/
+
+/*
+	PHASE 2 EDITS:
+	New module instances:
+	- ram: The 512x32 memory unit.
+	- SelectAndEncodeLogic: IR decoding logic.
+	- condition_ff_logic: branch condition decoding logic.
+	
+	New control signals were added to the module's I/O list:
+	
+	Inputs
+	- CONin serves as the enable for conditional branch logic decoding.
+	- Gra, Grb, Grc, Rout, Rin, BAout select the contents of the IR to be placed on the GRin / GRout register-enable Buses.
+	- RAM_wr enables the memory write operation.
+	
+	Outputs:
+	- CON indicates whether a branch condition as been met.
+
 */
 
 
