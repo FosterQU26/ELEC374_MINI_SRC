@@ -192,11 +192,11 @@ module datapath_tb();
 		
 		load_reg(32'h0300_0000, 32'hFF00);		// Load R6
 		
-		load_reg(32'h0280_0000, 32'hBEEF);		// Load R5
+		load_reg(32'hC980_0000, 32'hBEEF);		// Load R3
 	
 	//---------Specify Instr-----------//
 		
-		op_code = ORI;
+		op_code = MFHI;
 		alu_code = op_to_alu (op_code);
 		
 	//---------Fetch Instruction---------//
@@ -226,6 +226,14 @@ module datapath_tb();
 			LDI: LOAD_imm();
 			
 			ST: STORE();
+			
+			MFHI: Move_HI();
+			
+			MFLO: Move_LO();
+			
+			OUT: out();
+			
+			IN: in();
 			
 			default: $stop;
 			
@@ -552,6 +560,48 @@ module datapath_tb();
 			RAM_wr <= 1;
 			@(posedge clk)
 			RAM_wr <= 0;
+
+		end
+	endtask
+	
+		//-------Move and Port Tasks-------//
+		
+	task Move_HI();
+		begin
+
+		Rin <= 1; Gra <= 1; DPout[`HI] <= 1; 
+		@(posedge clk)
+		Rin <= 0; Gra <= 0; DPout[`HI] <= 0;
+
+		end
+	endtask
+	
+	task Move_LO();
+		begin
+		
+		Rin <= 1; Gra <= 1; DPin[`LO] <= 1;
+		@(posedge clk)
+		Rout <= 0; Gra <= 0; DPin[`LO] <= 0;
+
+		end
+	endtask
+
+	task out ();
+		begin
+		
+		Rout <= 1; Gra <= 1; DPout[`OUTPORT] <= 1;
+		@(posedge clk)
+		Rout <= 0; Gra <= 0; DPout[`OUTPORT] <= 0;
+
+		end
+	endtask
+
+	task in ();
+		begin
+		
+		Rin <= 1; Gra <= 1; DPin[`INPORT] <= 1;
+		@(posedge clk)
+		Rin <= 0; Gra <= 0; DPout[`INPORT] <= 0;
 
 		end
 	endtask
