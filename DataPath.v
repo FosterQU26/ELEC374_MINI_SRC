@@ -579,9 +579,9 @@ module datapath_tb();
 	task Move_LO();
 		begin
 		
-		Rin <= 1; Gra <= 1; DPin[`LO] <= 1;
+		Rin <= 1; Gra <= 1; DPout[`LO] <= 1;
 		@(posedge clk)
-		Rout <= 0; Gra <= 0; DPin[`LO] <= 0;
+		Rin <= 0; Gra <= 0; DPout[`LO] <= 0;
 
 		end
 	endtask
@@ -589,9 +589,9 @@ module datapath_tb();
 	task out ();
 		begin
 		
-		Rout <= 1; Gra <= 1; DPout[`OUTPORT] <= 1;
+		Rout <= 1; Gra <= 1; DPin[`OUTPORT] <= 1;
 		@(posedge clk)
-		Rout <= 0; Gra <= 0; DPout[`OUTPORT] <= 0;
+		Rout <= 0; Gra <= 0; DPin[`OUTPORT] <= 0;
 
 		end
 	endtask
@@ -599,7 +599,7 @@ module datapath_tb();
 	task in ();
 		begin
 		
-		Rin <= 1; Gra <= 1; DPin[`INPORT] <= 1;
+		Rin <= 1; Gra <= 1; DPout[`INPORT] <= 1;
 		@(posedge clk)
 		Rin <= 0; Gra <= 0; DPout[`INPORT] <= 0;
 
