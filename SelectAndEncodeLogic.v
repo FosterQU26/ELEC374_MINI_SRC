@@ -1,9 +1,10 @@
 /* 
-	Select and Encode Logic Block, Encodes the Ra, Rb and Rc signals from IR
-	GRout and GRin outputs are selected using the signals Rin, Rout and BAout
-	Also Provides a Sign-Extended C to the DataPath Bus
+	SelectAndEncodeLogic handles register encoding according to the Ra, Rb, and Rc segments of the IR.
+	It accepts inputs Gra, Grb, and Grc, that when asserted, places the one-hot encoded register identifier on 16-bit GRin or GRout
+	based on Rin, Rout, or GAout.
+	
+	The module additionally provides a sign-extended immediate (C) to the DataPath Bus.
 */
-
 
 module SelectAndEncodeLogic (
 

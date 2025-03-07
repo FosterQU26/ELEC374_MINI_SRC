@@ -10,7 +10,9 @@
 	Therefore, in all instantiations of this module, signals like 'rXin' are grouped as a single vector GRin.
 	Similarly, signals like 'rXout' are grouped as a single vector GRout.
 	
-	The R0 register has additional function added to it to allow BAout to select all zeros
+	PHASE 2 EDIT:
+	When BAout is high and the address presented to the module refers to R0, 
+	zero is placed on the output data lines rather than the contents of the register.
 */
 
 module R0_R15_GenPurposeRegs #(
@@ -19,7 +21,7 @@ module R0_R15_GenPurposeRegs #(
 	input clk, reg_clear, BAout,
 	input [31:0] BusMuxOut,
 	input [15:0] GRin, // enable vector (One-Hot). IN refers to the perspective of the registers, not the Bus.
-	input	[15:0] GRoutA, // read vector (One-Hot). OUT refers to the perspective of the registers, not the Bus.
+	input	[15:0] GRout, // read vector (One-Hot). OUT refers to the perspective of the registers, not the Bus.
 			
 	output [31:0] BusMuxIn
 	);
@@ -40,10 +42,10 @@ module R0_R15_GenPurposeRegs #(
 
 	//Encode 16 r..out signals to r_addr
 
-	assign r_addr[0] = GRoutA[1] | GRoutA[3] | GRoutA[5] | GRoutA[7] | GRoutA[9] | GRoutA[11] | GRoutA[13] | GRoutA[15];
-	assign r_addr[1] = GRoutA[2] | GRoutA[3] | GRoutA[6] | GRoutA[7] | GRoutA[10] | GRoutA[11] | GRoutA[14] | GRoutA[15];
-	assign r_addr[2] = GRoutA[4] | GRoutA[5] | GRoutA[6] | GRoutA[7] | GRoutA[12] | GRoutA[13] | GRoutA[14] | GRoutA[15];
-	assign r_addr[3] = GRoutA[8] | GRoutA[9] | GRoutA[10] | GRoutA[11] | GRoutA[12] | GRoutA[13] | GRoutA[14] |GRoutA[15];
+	assign r_addr[0] = GRout[1] | GRout[3] | GRout[5] | GRout[7] | GRout[9] | GRout[11] | GRout[13] | GRout[15];
+	assign r_addr[1] = GRout[2] | GRout[3] | GRout[6] | GRout[7] | GRout[10] | GRout[11] | GRout[14] | GRout[15];
+	assign r_addr[2] = GRout[4] | GRout[5] | GRout[6] | GRout[7] | GRout[12] | GRout[13] | GRout[14] | GRout[15];
+	assign r_addr[3] = GRout[8] | GRout[9] | GRout[10] | GRout[11] | GRout[12] | GRout[13] | GRout[14] |GRout[15];
 
 	// Mux BusMuxOut with default value for clear
 

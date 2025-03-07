@@ -1,10 +1,7 @@
 /*
-	Ram block implements a modular sized RAM block with a syncronous write and asyncronous read
-	Depth and Width parameters can be used to change the capacity and word size respectively
-	
-	Design Issue
-	Due to limitation the group faced with readmemh an Absolute path must be used to the ram.txt file
-	This must be Changed on every device that runs the project
+	Modular 2^depth x width memory array with 1 read port and 1 write port.
+	Read port accesses r_data according to address r_addr asynchronously.
+	The single write port writes w_data to address w_addr synchronously.
 */
 
 
@@ -23,10 +20,11 @@ module ram #(
 	// This definition enforces a right-to-left increasing bit significance, and an up-to-down addressing scheme.
 	reg [width-1:0] memory_array [0:2**depth-1];
 	
+	
+	// DESIGN LIMITATION: an absolute path is required to read the contents of ram.txt, which needs to be changed based on the device.
 	initial $readmemh("C:/Users/foste/Documents/3rd_Year_24-25/ELEC374/ELEC374_MINI_SRC/ram.txt", memory_array);
 	
-	// r_data1/2 are immediately available as r_addr1/2 is presented to the RF
-	// Two read addresses are supported by the register file should we choose to implement a 3-bus design in later phases.
+	// r_data is immediately available as r_addr is presented to the RF (asynchronous)
 	assign r_data = memory_array[r_addr];
 	
 	// Data writes are synchronous to clk with wr_en high.

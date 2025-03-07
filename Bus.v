@@ -2,6 +2,10 @@
 	Bus is the central data transfer mechanism.
 	The read and write ports of each registers are interfaced to the bus. 
 	Data placed on the bus is chosen according to control signals respective to each register.
+	
+	PHASE 2 EDIT: 
+	32-bit vector C_in was added to the input sensitivity list, paired with Cout, its corresponding control signal. 
+	When C_in is high, the sign-extended immediate value from the IR is placed on the bus.
 */
 
 module Bus (
@@ -14,9 +18,9 @@ module Bus (
 	input [31:0] PC_in,
 	input [31:0] MDR_in,
 	input [31:0] INPORT_in,
-	input [31:0] C_in,		//Added C for Phase 2
+	input [31:0] C_in,		// C_in for Phase 2
 	
-	input R0R15_out, HI_out, LO_out, ZHI_out, ZLO_out, PC_out, MDR_out, INPORT_out, C_out,
+	input R0R15_out, HI_out, LO_out, ZHI_out, ZLO_out, PC_out, MDR_out, INPORT_out, C_out, // C_out for Phase 2
 	
 	// data-out from the bus
 	output wire [31:0] BusMuxOut

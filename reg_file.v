@@ -34,8 +34,7 @@ module reg_file #(
 		end
 	end 
 	
-	// r_data1/2 are immediately available as r_addr1/2 is presented to the RF
-	// Two read addresses are supported by the register file should we choose to implement a 3-bus design in later phases.
+	// r_data is immediately available as r_addr is presented to the RF (asynchronous read)
 	assign r_data = reg_array[r_addr];
 	
 	// Data writes are synchronous to clk with wr_en high.
