@@ -25,8 +25,9 @@ module mini_src_group_1 (
 
 	Control ctrl (reset, stop, clk, CON, IRop, clr, CONin, RAM_wr, Gra, Grb, Grc, Rin, Rout, BAout, DPin, DPout, ALUopp, run);
 	
-	
 endmodule
+
+`timescale 1ns/1ps
 
 module tl_testbench();
 	reg clk, reset, stop;
@@ -47,8 +48,14 @@ module tl_testbench();
 		@(posedge clk);
 		
 		reset <= 0;
-		repeat (4200) @(posedge clk);
+		repeat (420) @(posedge clk);
+		stop <= 1;
+		@(posedge clk);
+		stop <= 0;
+		@(posedge clk);
+		@(posedge clk);
+		$stop;
 	
 	end
-
+	
 endmodule
