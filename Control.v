@@ -49,7 +49,8 @@ module Control (
 	output reg [15:0] DPin, DPout,
 	
 	// ALU Control
-	output [15:0] ALUopp
+	output [15:0] ALUopp,
+	output Run
 	
 );
 	
@@ -144,13 +145,7 @@ module Control (
 							DPin[`Y] = 1'b1;
 						end
 						
-						NEG, NOT:
-						begin
-							ns = T4nn;
-							Rout = 1'b1;
-							Grb = 1'b1;
-							DPin[`Z] = 1'b1;
-						end
+						NEG, NOT: ns = T4nn;
 						
 						BR:
 						begin
@@ -248,7 +243,13 @@ module Control (
 				DPin[`Z] = 1'b1;
 			end
 			
-			T4nn: ns = T5ALU;
+			T4nn: 
+			begin
+				ns = T5ALU;
+				Rout = 1'b1;
+				Grb = 1'b1;
+				DPin[`Z] = 1'b1;
+			end
 			
 			T4br: if (CON) begin
 						ns = T5br;
@@ -418,6 +419,7 @@ module Control (
 	endfunction
 	
 	assign ALUopp = (ps == T0) ? 1'b1 << `INC : 1'b1 << op;
+	assign Run = ~(ps == Thalt);
 	
 	task zeroes();
 		begin
@@ -428,4 +430,199 @@ module Control (
 	endtask
 	
 	
+endmodule
+
+
+
+
+`timescale 1ns/1ps
+
+module Control_tb;
+
+    // Inputs to DUT
+    reg         reset, stop, clk, CON;
+    reg  [31:27] IR;  // Only bits 31:27 are used in decoding
+
+    // Outputs from DUT
+    wire        clr, CONin, RAM_wr;
+    wire        Gra, Grb, Grc, Rin, Rout, BAout;
+    wire [15:0] DPin, DPout, ALUopp;
+    wire        Run;
+    
+    // Instantiate the Device Under Test (DUT)
+    Control uut (
+        .reset(reset),
+        .stop(stop),
+        .clk(clk),
+        .CON(CON),
+        .IR(IR),
+        .clr(clr),
+        .CONin(CONin),
+        .RAM_wr(RAM_wr),
+        .Gra(Gra),
+        .Grb(Grb),
+        .Grc(Grc),
+        .Rin(Rin),
+        .Rout(Rout),
+        .BAout(BAout),
+        .DPin(DPin),
+        .DPout(DPout),
+        .ALUopp(ALUopp),
+        .Run(Run)
+    );
+    
+    // Clock generation: 10 ns period
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;
+    end
+
+    // Task to run simulation for a given number of clock cycles
+    task run_cycles(input integer n);
+        integer i;
+        begin
+            for(i = 0; i < n; i = i + 1)
+                @(posedge clk);
+        end
+    endtask
+
+    // Task to apply an instruction and wait for the expected number of cycles.
+    // We use the expected cycle count to wait until the FSM should have returned to T0.
+    // Optionally, the branch instruction takes a CON input.
+    task apply_instruction(input [4:0] instr, input integer expected_cycles, input con_val);
+        begin
+            $display("\n[%0t] Applying instruction: %b, CON = %b", $time, instr, con_val);
+            IR = instr;
+            CON = con_val;
+                        
+            run_cycles(expected_cycles);
+            
+            // Check if the FSM has returned to T0 (the instruction fetch state)
+            // (Note: In this design T0 is used as the starting/fetch state.)
+            if(uut.ps !== 5'b00000)
+                $display("WARNING: FSM did not return to T0 after %0d cycles. Current state = %b", expected_cycles, uut.ps);
+            else
+                $display("PASSED: FSM returned to T0 as expected after %0d cycles", expected_cycles);
+        end
+    endtask
+
+    // Main stimulus sequence
+    initial begin
+        $display("Starting Control Module Testbench");
+        // Initialize signals
+        reset = 1; stop = 0; CON = 0; IR = 5'b0;
+        run_cycles(2);  // Hold reset for a couple of cycles
+        reset = 0;
+        run_cycles(2);  // Allow FSM to complete reset and move into T0
+
+        //-------------------------------------------------------------------------
+        // Test 1: ALU Operation (e.g. ADD)
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T4ALU -> T5ALU -> T0 (~6 cycles)
+        // Instruction code for ADD is 5'b00011.
+        apply_instruction(5'b00011, 6, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 2: ALU Immediate Operation (e.g. ADDI)
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T4ALUimm -> T5ALU -> T0 (~6 cycles)
+        // Instruction code for ADDI is 5'b01100.
+        apply_instruction(5'b01100, 6, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 3: Negative Operation (NEG)
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T4nn -> T5ALU -> T0 (~6 cycles)
+        // Instruction code for NEG is 5'b10001.
+        apply_instruction(5'b10001, 6, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 4: Multiply (MUL) Operation
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T4dm -> T5ALU -> T6dm -> T0 (~7 cycles)
+        // Instruction code for MUL is 5'b10000.
+        apply_instruction(5'b10000, 7, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 5: Division (DIV) Operation
+        // FSM path: Similar to MUL: T0 -> T1 -> T2 -> T3 -> T4dm -> T5ALU -> T6dm -> T0 (~7 cycles)
+        // Instruction code for DIV is 5'b01111.
+        apply_instruction(5'b01111, 7, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 6: Branch (BR) with false condition
+        // FSM path: When CON is false, T4br goes directly to T0:
+        // T0 -> T1 -> T2 -> T3 -> T4br -> T0 (~5 cycles)
+        // Instruction code for BR is 5'b10011.
+        apply_instruction(5'b10011, 5, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 7: Branch (BR) with true condition
+        // FSM path: When CON is true, branch takes the full path:
+        // T0 -> T1 -> T2 -> T3 -> T4br -> T5br -> T6br -> T0 (~7 cycles)
+        apply_instruction(5'b10011, 7, 1);
+        
+        //-------------------------------------------------------------------------
+        // Test 8: Memory Load (LD)
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T4ldst -> T5ld -> T6ld -> T7ld -> T0 (~8 cycles)
+        // Instruction code for LD is 5'b00000.
+        apply_instruction(5'b00000, 8, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 9: Memory Store (ST)
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T4ldst -> T5st -> T6st -> T7st -> T0 (~8 cycles)
+        // Instruction code for ST is 5'b00010.
+        apply_instruction(5'b00010, 8, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 10: Jump and Link (JAL)
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T4jal -> T0 (~5cycles)
+        // Instruction code for JAL is 5'b10100.
+        apply_instruction(5'b10100, 5, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 11: Jump Register (JR)
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T0 (~4 cycles) because the control goes directly to T0 in JR.
+        // Instruction code for JR is 5'b10101.
+        apply_instruction(5'b10101, 4, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 12: IN Instruction
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T0 (~5 cycles)
+        // Instruction code for IN is 5'b10110.
+        apply_instruction(5'b10110, 4, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 13: OUT Instruction
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T0 (~5 cycles)
+        // Instruction code for OUT is 5'b10111.
+        apply_instruction(5'b10111, 4, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 14: MFLO Instruction
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T0 (~5 cycles)
+        // Instruction code for MFLO is 5'b11000.
+        apply_instruction(5'b11000, 4, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 15: MFHI Instruction
+        // FSM path: T0 -> T1 -> T2 -> T3 -> T0 (~5 cycles)
+        // Instruction code for MFHI is 5'b11001.
+        apply_instruction(5'b11001, 4, 0);
+        
+        //-------------------------------------------------------------------------
+        // Test 16: HALT Instruction
+        // FSM path: T0 -> T1 -> T2 -> T3 -> Thalt and then remain in Thalt (~5 cycles)
+        // Instruction code for HALT is 5'b11011.
+        apply_instruction(5'b11011, 4, 0);
+        
+        // End simulation after a short delay
+        #20;
+        $display("Simulation complete.");
+        $stop;
+    end
+
+    // Optional: Monitor important signals and the FSM state
+    // (Accessing the internal state variable (ps) hierarchically from the DUT)
+    initial begin
+        $monitor("Time=%0t | FSM State=%b | IR=%b | clr=%b | CONin=%b | RAM_wr=%b | Gra=%b | Grb=%b | Grc=%b | Rin=%b | Rout=%b | BAout=%b",
+                 $time, uut.ps, IR, clr, CONin, RAM_wr, Gra, Grb, Grc, Rin, Rout, BAout);
+    end
+
 endmodule
