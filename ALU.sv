@@ -54,8 +54,8 @@ module ALU (
 	
 	//------------- DIV -------------//
 	
-	wire [63:0] div_result;
-	DIV divider(.Q(x), .M(y), .clk(clk), .resetn(ALUopp[`DIV]), .quotient(div_result[31:0]), .remainder(div_result[63:32]));
+	//wire [63:0] div_result;
+	//DIV divider(.Q(x), .M(y), .clk(clk), .resetn(ALUopp[`DIV]), .quotient(div_result[31:0]), .remainder(div_result[63:32]));
 	
 	//------------- Shift and Rotate -------------//
 	
@@ -113,7 +113,7 @@ module ALU (
 		else if (ALUopp[`MUL])
 			Z = mult_result;
 		else if (ALUopp[`DIV])
-			Z = div_result;
+			Z = x / y;
 		else if (ALUopp[`AND])
 			Z = x & y;
 		else if (ALUopp[`OR])

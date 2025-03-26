@@ -37,7 +37,7 @@ module Control (
 	
 	// Datapath Inputs
 	input CON,
-	input [31:27] IR,
+	input [31:27] IRop,
 	
 	// Execution Control Signals
 	output reg clr, CONin, RAM_wr,
@@ -50,8 +50,9 @@ module Control (
 	
 	// ALU Control
 	output [15:0] ALUopp,
-	output Run
 	
+	// Status indicator
+	output run
 );
 	
 	
@@ -120,7 +121,7 @@ module Control (
 			end
 			
 			// DECODE STAGE
-			T3: case(IR[31:27])
+			T3: case(IRop[31:27])
 						MUL, DIV: 
 						begin
 							ns = T4dm;
@@ -263,8 +264,8 @@ module Control (
 				DPout[`C] = 1'b1;
 				DPin[`Z] = 1'b1;
 			
-				if (IR[31:27] == ST) ns = T5st;
-				else if (IR[31:27] == LD) ns = T5ld;
+				if (IRop[31:27] == ST) ns = T5st;
+				else if (IRop[31:27] == LD) ns = T5ld;
 				else ns = T5ldi;
 			end
 			
@@ -280,7 +281,7 @@ module Control (
 			T5ALU: 
 			begin
 				DPout[`ZLO] = 1'b1;
-				if (IR[31:27] == MUL || IR[31:27] == DIV) begin 
+				if (IRop[31:27] == MUL || IRop[31:27] == DIV) begin 
 					ns = T6dm;
 					DPin[`LO] = 1'b1;
 				end
@@ -389,7 +390,7 @@ module Control (
 		else
 			ps <= ns;
 			if (ps == T3)  // Assign op only when exiting T3
-            op <= op_to_alu(IR[31:27]);
+            op <= op_to_alu(IRop[31:27]);
 	end
 	
 	//--------------------------------//
@@ -419,7 +420,7 @@ module Control (
 	endfunction
 	
 	assign ALUopp = (ps == T0) ? 1'b1 << `INC : 1'b1 << op;
-	assign Run = ~(ps == Thalt);
+	assign run = ~(ps == Thalt);
 	
 	task zeroes();
 		begin
@@ -447,7 +448,7 @@ module Control_tb;
     wire        clr, CONin, RAM_wr;
     wire        Gra, Grb, Grc, Rin, Rout, BAout;
     wire [15:0] DPin, DPout, ALUopp;
-    wire        Run;
+    wire        run;
     
     // Instantiate the Device Under Test (DUT)
     Control uut (
@@ -468,7 +469,7 @@ module Control_tb;
         .DPin(DPin),
         .DPout(DPout),
         .ALUopp(ALUopp),
-        .Run(Run)
+        .run(run)
     );
     
     // Clock generation: 10 ns period

@@ -60,7 +60,7 @@ module multiplier_32b_tb;
     wire [63:0] result;
     
     // Instantiate the multiplier
-    multiplier_32b dut (M, Q, Result);
+    multiplier_32b dut (M, Q, result);
     
     // Test procedure
     initial begin
