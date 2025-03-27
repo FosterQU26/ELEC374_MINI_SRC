@@ -78,16 +78,16 @@ module multiplier_32b_tb;
 	end
 
 	task run_test(input signed [31:0] M_in, input signed [31:0] Q_in, input signed [31:0] expected_result);
-	begin
-		 M = M_in;
-		 Q = Q_in;
-		 #10; // Wait for computation
+		begin
+			 M = M_in;
+			 Q = Q_in;
+			 #10; // Wait for computation
 
-		 if (result !== expected_result) begin
-			  $display("Test Failed: M=%d, Q=%d -> Expected Result=%d but got Result=%d",
-						  M_in, Q_in, expected_result, result);
-		 end 
-	end
+			 if (result !== expected_result) begin
+				  $display("Test Failed: M=%d, Q=%d -> Expected Result=%d but got Result=%d",
+							  M_in, Q_in, expected_result, result);
+			 end 
+		end
 	endtask
 
 endmodule
