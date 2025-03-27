@@ -75,95 +75,70 @@ endmodule
 
 module DIV_tb;
 
-    // Declare inputs as reg type
-    reg [31:0] Q;
-    reg [31:0] M;
-    reg clk, resetn;
+	// Declare inputs as reg type
+	reg [31:0] Q;
+	reg [31:0] M;
+	reg clk, resetn;
 
-    // Declare outputs as wire type
-    wire [31:0] quotient;
-    wire [31:0] remainder;
+	// Declare outputs as wire type
+	wire [31:0] quotient;
+	wire [31:0] remainder;
 
-    // Instantiate the DIV module
-    DIV uut (
-        .Q(Q),
-        .M(M),
-        .clk(clk),
-		  .resetn(resetn),
-        .quotient(quotient),
-        .remainder(remainder)
-    );
+	// Instantiate the DIV module
+	DIV uut (
+	  .Q(Q),
+	  .M(M),
+	  .clk(clk),
+	  .resetn(resetn),
+	  .quotient(quotient),
+	  .remainder(remainder)
+	);
 
-    // Clock generation
-    always begin
-	     clk = 0;
-        forever #5 clk = ~clk;
-    end
+	// Clock generation
+	always begin
+	  clk = 0;
+	  forever #5 clk = ~clk;
+	end
 
 	initial begin
-		  
-		resetn = 0;
+		 resetn = 0;
+		 @ (posedge clk);
+		 resetn = 1;
 
-		@ (posedge clk)
-
-		resetn = 1;
-		Q = 32'd38;  
-		M = 32'd6;   
-
-		#340;  
-
-		@ (posedge clk)
-		
-		resetn = 0;
-
-		@ (posedge clk)
-
-		resetn = 1;
-		Q = 32'd100;
-		M = 32'd25;
-		#340;
-		
-		@ (posedge clk)
-		
-		resetn = 0;
-
-		@ (posedge clk)
-
-		resetn = 1;
-		Q = {0,{31{1'b1}}};
-		M = {0,{31{1'b1}}};
-		#340;
-		
-		@ (posedge clk)
-		
-		resetn = 0;
-		
-		@ (posedge clk)
-
-		resetn = 1;
-		Q = {0,{31{1'b1}}};
-		M = 32'b1;
-		#340;
-		
-		@ (posedge clk)
-		
-		resetn = 0;
-		
-		@ (posedge clk)
-
-		resetn = 1;
-		Q = 32'b1;
-		M = 32'd50;
-		#340;
-		
-		@ (posedge clk)
-		
-		resetn = 0;
-		
-		@ (posedge clk)
-
-		$stop;
+		 // Test Cases
+		 run_test(32'd38, 32'd6, 32'd6, 32'd2);       // 38 / 6 = 6 remainder 2
+		 run_test(32'd100, 32'd25, 32'd4, 32'd0);     // 100 / 25 = 4 remainder 0
+		 run_test(32'b1, 32'd50, 32'd0, 32'd1);       // 1 / 50 = 0 remainder 1
+		 run_test(32'd0, 32'd10, 32'd0, 32'd0);       // 0 / 10 = 0 remainder 0
+		 run_test(-32'd38, 32'd6, -32'd6, 32'd2);     // -38 / 6 = -6 remainder 2
+		 run_test(32'd38, -32'd6, -32'd6, 32'd2);     // 38 / -6 = -6 remainder 2
+		 run_test(-32'd38, -32'd6, 32'd6, 32'd2);     // -38 / -6 = 6 remainder 2
+		 
+		 $display("Testbench completed successfully");
+		 
+		 $stop;
 	end
+
+	task run_test(input [31:0] Q_in, input [31:0] M_in, input [31:0] expected_quotient, input [31:0] expected_remainder);
+	begin
+		 resetn = 0;
+		 @ (posedge clk);
+		 resetn = 1;
+		 Q = Q_in;
+		 M = M_in;
+		 
+		 #340; // Wait for calculation (34 clock cycles)
+		 		 
+		 @ (posedge clk); @ (posedge clk);
+
+		 if (quotient !== expected_quotient || remainder !== expected_remainder) begin
+			  $display("Test Failed: Q=%d, M=%d -> Expected Quotient=%d, Remainder=%d but got Quotient=%d, Remainder=%d",
+						  Q_in, M_in, expected_quotient, expected_remainder, quotient, remainder);
+		 end 
+
+		 @ (posedge clk);
+	end
+	endtask
 
 endmodule
 

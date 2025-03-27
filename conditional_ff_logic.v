@@ -46,25 +46,37 @@ module con_ff_tb();
 		forever #(clock_period/2) clk <= ~clk;
 	end
 	
-	initial begin
-		// Branch if 0
-		IR_20_19 <= 2'b00; BusMuxOut <= 32'b0; CONin <= 1'b0; @(posedge clk) // No impact.
-		IR_20_19 <= 2'b00; BusMuxOut <= 32'b0; CONin <= 1'b1; @(posedge clk) // Success
-		IR_20_19 <= 2'b00; BusMuxOut <= 32'b1; CONin <= 1'b1; @(posedge clk) // Failure
-		
-		// Branch if not 0
-		IR_20_19 <= 2'b01; BusMuxOut <= 32'b1; CONin <= 1'b1; @(posedge clk) // Success
-		IR_20_19 <= 2'b01; BusMuxOut <= 32'b0; CONin <= 1'b1; @(posedge clk) // Failure
-		
-		// Branch if pos
-		IR_20_19 <= 2'b10; BusMuxOut <= 32'b1; CONin <= 1'b1; @(posedge clk) // Success
-		IR_20_19 <= 2'b10; BusMuxOut <= 32'hFFFF0000; CONin <= 1'b1; @(posedge clk) // Failure
-		
-		// Branch if neg
-		IR_20_19 <= 2'b11; BusMuxOut <= 32'hFFFF0000; CONin <= 1'b1; @(posedge clk) // Success
-		IR_20_19 <= 2'b11; BusMuxOut <= 32'b1; CONin <= 1'b1; @(posedge clk); // Failure
-		
-		@(posedge clk)
-		$stop;
-	end
+    initial begin
+        // Branch if 0 
+        IR_20_19 <= 2'b00; BusMuxOut <= 32'b0; CONin <= 1'b1; @(posedge clk); @(posedge clk);
+        if (CON !== 1) $display("Failure: IR_20_19=%b, BusMuxOut=%h, Expected CON=1, Got CON=%b", IR_20_19, BusMuxOut, CON); 
+        
+        IR_20_19 <= 2'b00; BusMuxOut <= 32'b1; CONin <= 1'b1; @(posedge clk); @(posedge clk);
+        if (CON !== 0) $display("Failure: IR_20_19=%b, BusMuxOut=%h, Expected CON=0, Got CON=%b", IR_20_19, BusMuxOut, CON); 
+        
+        // Branch if not 0
+        IR_20_19 <= 2'b01; BusMuxOut <= 32'b1; CONin <= 1'b1; @(posedge clk); @(posedge clk);
+        if (CON !== 1) $display("Failure: IR_20_19=%b, BusMuxOut=%h, Expected CON=1, Got CON=%b", IR_20_19, BusMuxOut, CON); 
+         
+        IR_20_19 <= 2'b01; BusMuxOut <= 32'b0; CONin <= 1'b1; @(posedge clk); @(posedge clk);
+        if (CON !== 0) $display("Failure: IR_20_19=%b, BusMuxOut=%h, Expected CON=0, Got CON=%b", IR_20_19, BusMuxOut, CON); 
+        
+        // Branch if pos
+        IR_20_19 <= 2'b10; BusMuxOut <= 32'b1; CONin <= 1'b1; @(posedge clk); @(posedge clk);
+        if (CON !== 1) $display("Failure: IR_20_19=%b, BusMuxOut=%h, Expected CON=1, Got CON=%b", IR_20_19, BusMuxOut, CON); 
+        
+        IR_20_19 <= 2'b10; BusMuxOut <= 32'hFFFF0000; CONin <= 1'b1; @(posedge clk); @(posedge clk);
+        if (CON !== 0) $display("Failure: IR_20_19=%b, BusMuxOut=%h, Expected CON=0, Got CON=%b", IR_20_19, BusMuxOut, CON); 
+        
+        // Branch if neg
+        IR_20_19 <= 2'b11; BusMuxOut <= 32'hFFFF0000; CONin <= 1'b1; @(posedge clk); @(posedge clk);
+        if (CON !== 1) $display("Failure: IR_20_19=%b, BusMuxOut=%h, Expected CON=1, Got CON=%b", IR_20_19, BusMuxOut, CON); 
+        
+        IR_20_19 <= 2'b11; BusMuxOut <= 32'b1; CONin <= 1'b1; @(posedge clk); @(posedge clk);
+        if (CON !== 0) $display("Failure: IR_20_19=%b, BusMuxOut=%h, Expected CON=0, Got CON=%b", IR_20_19, BusMuxOut, CON); 
+        
+        $display("Testbench completed successfully");
+        @(posedge clk)
+        $stop;
+    end
 endmodule
