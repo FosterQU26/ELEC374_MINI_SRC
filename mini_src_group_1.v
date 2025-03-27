@@ -35,7 +35,7 @@ module tl_testbench();
 	wire [31:0] OUTPORTout;
 	wire run;
 	
-	mini_src_group_1 uut (clk, reset, stop, INPORTin, OUTPUTout, run);
+	mini_src_group_1 uut (clk, reset, stop, INPORTin, OUTPORTout, run);
 	
 	initial begin
 		clk <= 0;
@@ -48,14 +48,12 @@ module tl_testbench();
 		@(posedge clk);
 		
 		reset <= 0;
-		repeat (420) @(posedge clk);
-		stop <= 1;
-		@(posedge clk);
-		stop <= 0;
-		@(posedge clk);
-		@(posedge clk);
-		$stop;
-	
+		
+		while(1) begin
+			@(posedge clk);
+			if(!run) $stop;
+		end
+		
 	end
 	
 endmodule

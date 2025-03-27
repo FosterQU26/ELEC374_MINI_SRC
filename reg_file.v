@@ -16,7 +16,7 @@ module reg_file #(
 	parameter depth = 4,
 	parameter width = 32
 	)(
-	input clk, wr_en,
+	input clk, clr, wr_en,
 	input [depth-1:0] r_addr, w_addr,
 	input [width-1:0] w_data,
 	output [width-1:0] r_data
@@ -38,6 +38,17 @@ module reg_file #(
 	assign r_data = reg_array[r_addr];
 	
 	// Data writes are synchronous to clk with wr_en high.
-	always @(posedge clk) if (wr_en) reg_array[w_addr] = w_data;
+	always @(posedge clk) begin
+		if (clr) begin
+			for (i=0; i<2**depth; i = i+1) begin
+					reg_array[i] = 32'b0;
+			end
+		end
+		
+		else if (wr_en) begin
+			reg_array[w_addr] = w_data;
+		end
+		
+	end
 
 endmodule

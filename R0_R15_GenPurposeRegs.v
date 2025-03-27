@@ -15,9 +15,7 @@
 	zero is placed on the output data lines rather than the contents of the register.
 */
 
-module R0_R15_GenPurposeRegs #(
-	parameter ClrVal = 32'b0
-	)(
+module R0_R15_GenPurposeRegs(
 	input clk, reg_clear, BAout,
 	input [31:0] BusMuxOut,
 	input [15:0] GRin, // enable vector (One-Hot). IN refers to the perspective of the registers, not the Bus.
@@ -47,17 +45,17 @@ module R0_R15_GenPurposeRegs #(
 	assign r_addr[2] = GRout[4] | GRout[5] | GRout[6] | GRout[7] | GRout[12] | GRout[13] | GRout[14] | GRout[15];
 	assign r_addr[3] = GRout[8] | GRout[9] | GRout[10] | GRout[11] | GRout[12] | GRout[13] | GRout[14] |GRout[15];
 
-	// Mux BusMuxOut with default value for clear
+	//BusMuxOut is w_data
 
-	assign w_data = reg_clear ? ClrVal : BusMuxOut;
+	assign w_data = BusMuxOut;
 
 	// Enable logic: clear or any r..in signal
 	// Using Reduction or to check if any value in encoded signal w_addr is 1
 
-	assign enable = reg_clear | GRin[0] | (|w_addr);
+	assign enable = GRin[0] | (|w_addr);
 
 	// 16x32reg_file Module
-	reg_file RF(clk, enable, r_addr, w_addr, w_data, data_out);
+	reg_file RF(clk, reg_clear, enable, r_addr, w_addr, w_data, data_out);
 	
 	assign BusMuxIn = (GRout[0] && BAout) ? 32'b0 : data_out;
 	
