@@ -145,33 +145,43 @@ module ALU_tb;
 		forever #(5) clk <= ~clk;
 	 end
     
-    // Task to test a single operation
-    task test_op(input [15:0] op, input [31:0] a, input [31:0] b);
-        begin
-            ALUopp = op;
-            x = a;
-            y = b;
-            #10; // Wait for operation to complete
-        end
-    endtask
-    
-    // Test procedure
-    initial begin
-        
-        test_op(1 << `ADD, 32'd10, 32'd5);   // ADD: 10 + 5 = 15
-        test_op(1 << `SUB, 32'd15, 32'd5);   // SUB: 15 - 5 = 10
-        test_op(1 << `NEG, 32'd7, 32'd0);    // NEG: -7
-        test_op(1 << `MUL, 32'd4, 32'd3);    // MUL: 4 * 3 = 12
-        test_op(1 << `DIV, 32'd20, 32'd5);   // DIV: 20 / 5 = 4
-		  #340;
-        test_op(1 << `AND, 32'hF0F0F0F0, 32'h0F0F0F0F); // AND
-        test_op(1 << `OR,  32'hF0F0F0F0, 32'h0F0F0F0F); // OR
-        test_op(1 << `ROR, 32'h80000001, 0); // Rotate Right
-        test_op(1 << `ROL, 32'h40000000, 0); // Rotate Left
-        test_op(1 << `SLL, 32'h00000001, 2); // Shift Left Logical
-        test_op(1 << `SRA, 32'h80000000, 2); // Shift Right Arithmetic
-        test_op(1 << `SRL, 32'h80000000, 2); // Shift Right Logical
-        test_op(1 << `NOT, 32'hAAAAAAAA, 0); // NOT
-        $stop;
-    end
+	// Task to test a single operation
+	task test_op(input [15:0] op, input signed [31:0] a, input signed [31:0] b, input signed [31:0] expected_result);
+		 begin
+			  ALUopp = op;
+			  x = a;
+			  y = b;
+			  #10; // Wait for operation to complete
+
+			  if ($signed(Z) !== expected_result) begin
+					$display("Test Failed: op=%d, a=%d, b=%d -> Expected result=%d but got result=%d",
+								op, a, b, expected_result, Z);
+			  end 
+		 end
+	endtask
+
+	// Test procedure
+	initial begin
+		 test_op(1 << `ADD,  32'sd10,  32'sd5,  32'sd15);   // ADD: 10 + 5 = 15
+		 test_op(1 << `SUB,  32'sd15,  32'sd5,  32'sd10);   // SUB: 15 - 5 = 10
+		 test_op(1 << `NEG,  32'sd7,   32'sd0, -32'sd7);    // NEG: -7
+		 test_op(1 << `MUL,  32'sd4,   32'sd3,  32'sd12);   // MUL: 4 * 3 = 12
+		 test_op(1 << `DIV,  32'sd20,  32'sd5,  32'sd4);    // DIV: 20 / 5 = 4
+
+		 #340; // Wait before bitwise and shift operations
+
+		 test_op(1 << `AND,  32'hF0F0F0F0, 32'h0F0F0F0F, 32'h00000000); // AND
+		 test_op(1 << `OR,   32'hF0F0F0F0, 32'h0F0F0F0F, 32'hFFFFFFFF); // OR
+		 test_op(1 << `ROR,  32'h80000001, 32'd1,        32'hC0000000); // Rotate Right (example)
+		 test_op(1 << `ROL,  32'h40000000, 32'd1,        32'h80000000); // Rotate Left
+		 test_op(1 << `SLL,  32'h00000001, 32'd2,        32'h00000004); // Shift Left Logical
+		 test_op(1 << `SRA,  32'h80000000, 32'd2,        32'hE0000000); // Shift Right Arithmetic
+		 test_op(1 << `SRL,  32'h80000000, 32'd2,        32'h20000000); // Shift Right Logical
+		 test_op(1 << `NOT,  32'hAAAAAAAA, 32'd0,        32'h55555555); // NOT
+
+		 $display("Testbench completed successfully");
+		 
+		 $stop;
+	end
+
 endmodule

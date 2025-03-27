@@ -56,40 +56,39 @@ endmodule
 `timescale 1ns / 1ps
 
 module multiplier_32b_tb;
-    reg [31:0] M, Q;
-    wire [63:0] result;
+    reg signed [31:0] M, Q;
+    wire signed [63:0] result;
     
     // Instantiate the multiplier
     multiplier_32b dut (M, Q, result);
     
-    // Test procedure
-    initial begin
-        // Test cases
-        M = 32'd0; Q = 32'd0; #10; // 0 * 0
-        $display("M=%d, Q=%d, result=%d", M, Q, result);
-        
-        M = 32'd15; Q = 32'd10; #10; // 15 * 10
-        $display("M=%d, Q=%d, result=%d", M, Q, result);
-        
-        M = -32'd15; Q = 32'd10; #10; // -15 * 10
-        $display("M=%d, Q=%d, result=%d", M, Q, result);
-        
-        M = 32'd15; Q = -32'd10; #10; // 15 * -10
-        $display("M=%d, Q=%d, result=%d", M, Q, result);
-        
-        M = -32'd15; Q = -32'd10; #10; // -15 * -10
-        $display("M=%d, Q=%d, result=%d", M, Q, result);
-        
-        M = 32'h7FFFFFFF; Q = 32'h00000001; #10; // Largest positive * 1
-        $display("M=%d, Q=%d, result=%d", M, Q, result);
-        
-        M = 32'h80000000; Q = 32'd1; #10; // Smallest negative * 1
-        $display("M=%d, Q=%d, result=%d", M, Q, result);
-        
-        M = 32'hFFFFFFFF; Q = 32'hFFFFFFFF; #10; // -1 * -1
-        $display("M=%d, Q=%d, result=%d", M, Q, result);
-        
-        $stop;
-    end
+	initial begin
+		 run_test(32'd0, 32'd0, 32'd0);                  // 0 * 0 = 0
+		 run_test(32'd15, 32'd10, 32'd150);              // 15 * 10 = 150
+		 run_test(-32'd15, 32'd10, -32'd150);            // -15 * 10 = -150
+		 run_test(32'd15, -32'd10, -32'd150);            // 15 * -10 = -150
+		 run_test(-32'd15, -32'd10, 32'd150);            // -15 * -10 = 150
+		 run_test(32'h7FFFFFFF, 32'd1, 32'h7FFFFFFF);    // Largest positive * 1
+		 run_test(32'h80000000, 32'd1, 32'h80000000);    // Smallest negative * 1
+		 run_test(32'hFFFFFFFF, 32'hFFFFFFFF, 32'd1);    // -1 * -1 = 1
+		 
+		 $display("Testbench completed successfully");
+
+		 $stop;
+	end
+
+	task run_test(input signed [31:0] M_in, input signed [31:0] Q_in, input signed [31:0] expected_result);
+	begin
+		 M = M_in;
+		 Q = Q_in;
+		 #10; // Wait for computation
+
+		 if (result !== expected_result) begin
+			  $display("Test Failed: M=%d, Q=%d -> Expected Result=%d but got Result=%d",
+						  M_in, Q_in, expected_result, result);
+		 end 
+	end
+	endtask
+
 endmodule
 

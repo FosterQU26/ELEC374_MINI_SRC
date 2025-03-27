@@ -1,4 +1,4 @@
-radix define opcode {
+radix define ALU_OPS {
     1       "ADD"
     2       "SUB"
     4       "NEG"
@@ -16,7 +16,7 @@ radix define opcode {
     default "UNKNOWN"
 }
 
-radix define reg_ids {
+radix define REG_IDS {
     1       "PC"
     2       "IR"
     4       "Y"
@@ -34,5 +34,67 @@ radix define reg_ids {
     4112    "READ & MDR"  ;# 4096 (READ) | 16 (MDR) = 4112
     4113    "READ & MDR & PC"
     8192    "C"
+    default "UNKNOWN"
+}
+
+radix define INSTR_CODES {
+    0  "LD"
+    1  "LDI"
+    2  "ST"
+    3  "ADD"
+    4  "SUB"
+    5  "AND"
+    6  "OR"
+    7  "ROR"
+    8  "ROL"
+    9  "SHR"
+    10 "SHRA"
+    11 "SHL"
+    12 "ADDI"
+    13 "ANDI"
+    14 "ORI"
+    15 "DIV"
+    16 "MUL"
+    17 "NEG"
+    18 "NOT"
+    19 "BR"
+    20 "JAL"
+    21 "JR"
+    22 "IN"
+    23 "OUT"
+    24 "MFLO"
+    25 "MFHI"
+    26 "NOP"
+    27 "HALT"
+
+    default "UNKNOWN"
+}
+
+radix define STATE_CODES {
+    0  "T0"
+    1  "T1"
+    2  "T2"
+    3  "T3"
+    4  "T4ALU"
+    5  "T4dm"
+    6  "T4ALUimm"
+    7  "T4nn"
+    8  "T4br"
+    9  "T4ldst"
+    10 "T4jal"
+    11 "T5ALU"
+    12 "T5br"
+    13 "T5ldi"
+    14 "T5ld"
+    15 "T5st"
+    16 "T6dm"
+    17 "T6br"
+    18 "T6ld"
+    19 "T6st"
+    20 "T7ld"
+    21 "T7st"
+    30 "Thalt"
+    31 "Treset"
+
     default "UNKNOWN"
 }
