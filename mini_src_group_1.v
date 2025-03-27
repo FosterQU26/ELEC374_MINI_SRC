@@ -54,14 +54,12 @@ module tl_testbench();
 		@(posedge clk);
 		
 		reset <= 0;
-		repeat (420) @(posedge clk);
-		stop <= 1;
-		@(posedge clk);
-		stop <= 0;
-		@(posedge clk);
-		@(posedge clk);
-		$stop;
-	
+		
+		while(1) begin
+			@(posedge clk);
+			if(!run) $stop;
+		end
+		
 	end
 	
 endmodule
