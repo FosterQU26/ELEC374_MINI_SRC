@@ -146,8 +146,14 @@ module Control (
 							DPin[`Y] = 1'b1;
 						end
 						
-						NEG, NOT: ns = T4nn;
-						
+						NEG, NOT: 
+						begin
+							ns = T4nn;
+							Rout = 1'b1;
+							Grb = 1'b1;
+							DPin[`Y] = 1'b1;
+						end
+										
 						BR:
 						begin
 							ns = T4br;
@@ -315,7 +321,7 @@ module Control (
 			
 			T5ldi:
 			begin
-				ns = T6ld;
+				ns = T0;
 				DPout[`ZLO] = 1'b1;
 				Gra = 1'b1;
 				Rin = 1'b1;
@@ -353,7 +359,7 @@ module Control (
 			T7ld:
 			begin
 				ns = T0;
-				DPout[`MAR] = 1'b1;
+				DPout[`MDR] = 1'b1;
 				Gra = 1'b1;
 				Rin = 1'b1;
 			end

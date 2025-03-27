@@ -64,27 +64,27 @@ module ALU (
 	always @(*) begin
 		shift_result = x;
 		if (ALUopp[`SLL]) begin // Barrel shift left
-			if (y[4]) shift_result = shift_result << 16;
-			if (y[3]) shift_result = shift_result << 8;
-			if (y[2]) shift_result = shift_result << 4;
-			if (y[1]) shift_result = shift_result << 2;
-			if (y[0]) shift_result = shift_result << 1;
+			if (y[4]) shift_result = {shift_result[15:0], 16'b0};
+			if (y[3]) shift_result = {shift_result[23:0], 8'b0};
+			if (y[2]) shift_result = {shift_result[27:0], 4'b0};
+			if (y[1]) shift_result = {shift_result[29:0], 2'b0};
+			if (y[0]) shift_result = {shift_result[30:0], 1'b0};
 		end
 		else 
 		if (ALUopp[`SRL]) begin // Barrel shift right
-			if (y[4]) shift_result = shift_result >> 16;
-			if (y[3]) shift_result = shift_result >> 8;
-			if (y[2]) shift_result = shift_result >> 4;
-			if (y[1]) shift_result = shift_result >> 2;
-			if (y[0]) shift_result = shift_result >> 1;
+			if (y[4]) shift_result = {16'b0, shift_result[31:16]};
+			if (y[3]) shift_result = {8'b0, shift_result[31:8]};
+			if (y[2]) shift_result = {4'b0, shift_result[31:4]};
+			if (y[1]) shift_result = {2'b0, shift_result[31:2]};
+			if (y[0]) shift_result = {1'b0, shift_result[31:1]};
 		end
 		else
 		if (ALUopp[`SRA]) begin // Barrel shift right arithmetic (>>>)
-			if (y[4]) shift_result = shift_result >>> 16;
-			if (y[3]) shift_result = shift_result >>> 8;
-			if (y[2]) shift_result = shift_result >>> 4;
-			if (y[1]) shift_result = shift_result >>> 2;
-			if (y[0]) shift_result = shift_result >>> 1;
+			if (y[4]) shift_result = {{16{shift_result[31]}}, shift_result[31:16]};
+			if (y[3]) shift_result = {{8{shift_result[31]}}, shift_result[31:8]};
+			if (y[2]) shift_result = {{4{shift_result[31]}}, shift_result[31:4]};
+			if (y[1]) shift_result = {{2{shift_result[31]}}, shift_result[31:2]};
+			if (y[0]) shift_result = {shift_result[31], shift_result[31:1]};
 		end
 		else
 		if (ALUopp[`ROR]) begin // Barrel rotate right
@@ -113,12 +113,12 @@ module ALU (
 		else if (ALUopp[`MUL])
 			Z = mult_result;
 		else if (ALUopp[`DIV])
-			Z = x / y;
+			Z = {x % y, x / y};
 		else if (ALUopp[`AND])
 			Z = x & y;
 		else if (ALUopp[`OR])
 			Z = x | y;
-		else if (ALUopp[`SLL] | ALUopp[`SLL] | ALUopp[`SLL] | ALUopp[`ROR] | ALUopp[`ROL])
+		else if (ALUopp[`SLL] | ALUopp[`SRA] | ALUopp[`SRL] | ALUopp[`ROR] | ALUopp[`ROL])
 			Z = shift_result;
 		else if (ALUopp[`NOT])
 			Z = ~x;			

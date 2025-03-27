@@ -59,7 +59,7 @@ module R0_R15_GenPurposeRegs #(
 	// 16x32reg_file Module
 	reg_file RF(clk, enable, r_addr, w_addr, w_data, data_out);
 	
-	assign BusMuxIn = (GRin[0] && BAout) ? 32'b0 : data_out;
+	assign BusMuxIn = (GRout[0] && BAout) ? 32'b0 : data_out;
 	
 endmodule
 
