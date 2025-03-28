@@ -4,7 +4,7 @@ module mini_src_group_1 (
 	input [1:0] KEY,
 	input [7:0] SW,
 	output [6:0] HEX0, HEX1,
-	output [5:5] LEDR
+	output [5:0] LEDR
 	);
 	
 	// Program Execution Control
@@ -13,10 +13,13 @@ module mini_src_group_1 (
 	wire [31:0] OUTPORTout;
 	wire [31:27] IRop;
 	
-	input_sanitizer sanitized_reset (CLOCK_50, 1'b0, ~KEY[0], reset);
-	input_sanitizer sanitized_stop (CLOCK_50, 1'b0, ~KEY[1], stop);
-	hex_to_7 out3_0 (OUTPORTout[3:0], HEX0);
-	hex_to_7 out7_4 (OUTPORTout[7:4], HEX1);
+	//input_sanitizer sanitized_reset (CLOCK_50, 1'b0, ~KEY[0], reset);
+   //input_sanitizer sanitized_stop (CLOCK_50, 1'b0, ~KEY[1], stop);
+	assign reset = ~KEY[0];
+	assign stop = ~KEY[1];
+	
+	//hex_to_7 out3_0 (OUTPORTout[3:0], HEX0);
+	//hex_to_7 out7_4 (OUTPORTout[7:4], HEX1);
 	
 	// General Purpose Register Control
 	wire Gra, Grb, Grc, Rin, Rout, BAout;
@@ -36,28 +39,31 @@ endmodule
 `timescale 1ns/1ps
 
 module tl_testbench();
-	reg clk, reset, stop;
-	reg [31:0] INPORTin;
-	wire [31:0] OUTPORTout;
-	wire run;
+	reg CLOCK_50;
+	reg [1:0] KEY;
+	reg [7:0] SW;
+	wire [6:0] HEX0, HEX1;
+	wire [5:0] LEDR;
 	
-	mini_src_group_1 uut (clk, reset, stop, INPORTin, OUTPORTout, run);
+	mini_src_group_1 uut (CLOCK_50, KEY, SW, HEX0, HEX1, LEDR);
 	
 	initial begin
-		clk <= 0;
-		forever #5 clk <= ~clk;
+		CLOCK_50 <= 0;
+		forever #5 CLOCK_50 <= ~CLOCK_50;
 	end
 	
 	initial begin
-		reset <= 1;
-		@(posedge clk);
-		@(posedge clk);
+		SW <= 8'h80;
+		KEY[1] <= 1;
+		KEY[0] <= 0;
 		
-		reset <= 0;
+		repeat(10) @(posedge CLOCK_50);
+		
+		KEY[0] <= 1;
 		
 		while(1) begin
-			@(posedge clk);
-			if(!run) $stop;
+			@(posedge CLOCK_50);
+			if(!LEDR[5]) $stop;
 		end
 		
 	end
