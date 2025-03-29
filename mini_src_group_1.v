@@ -13,10 +13,14 @@ module mini_src_group_1 (
 	wire [31:0] OUTPORTout;
 	wire [31:27] IRop;
 	
+	//TODO: Sanitize yo self
+	
 	//input_sanitizer sanitized_reset (CLOCK_50, 1'b0, ~KEY[0], reset);
    //input_sanitizer sanitized_stop (CLOCK_50, 1'b0, ~KEY[1], stop);
 	assign reset = ~KEY[0];
 	assign stop = ~KEY[1];
+	
+	//TODO: Hex yo Shit
 	
 	//hex_to_7 out3_0 (OUTPORTout[3:0], HEX0);
 	//hex_to_7 out7_4 (OUTPORTout[7:4], HEX1);
