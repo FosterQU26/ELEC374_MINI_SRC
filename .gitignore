@@ -40,3 +40,4 @@ simulation/
 # Ignore ram.v it has a ABS path
 ram.v
 
+ram.v

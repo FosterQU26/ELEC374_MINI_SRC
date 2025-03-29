@@ -20,7 +20,7 @@ module ram #(
 	// This definition enforces a right-to-left increasing bit significance, and an up-to-down addressing scheme.
 	reg [width-1:0] memory_array [0:2**depth-1];
 	
-	
+
 	// DESIGN LIMITATION: an absolute path is required to read the contents of ram.txt, which needs to be changed based on the device.
 	initial $readmemh("C:/Users/21fje/Desktop/ELEC374_MINI_SRC/ram.txt", memory_array);
 	
@@ -31,5 +31,6 @@ module ram #(
 	always @(posedge clk) begin
 		if (wr_en) memory_array[w_addr] <= w_data; 
 	end
+	
 	
 endmodule
