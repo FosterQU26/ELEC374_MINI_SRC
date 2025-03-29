@@ -122,49 +122,37 @@ radix define hex7seg {
   default "UNKNOWN"
 }
 
+add wave -position end  sim:/tl_testbench/CLOCK_50
+add wave -position end  sim:/tl_testbench/KEY
+add wave -position end  sim:/tl_testbench/SW
+add wave -position end  sim:/tl_testbench/HEX0
+add wave -position end  sim:/tl_testbench/HEX1
+add wave -position end  sim:/tl_testbench/LEDR
+add wave -position end  sim:/tl_testbench/uut/ctrl/NOP
+add wave -position end  sim:/tl_testbench/uut/ctrl/reset
+add wave -position end  sim:/tl_testbench/uut/ctrl/stop
+add wave -position end  sim:/tl_testbench/uut/ctrl/run
+add wave -position end  sim:/tl_testbench/uut/DP/clr
+add wave -position end  sim:/tl_testbench/uut/DP/CONin
+add wave -position end  sim:/tl_testbench/uut/DP/Gra
+add wave -position end  sim:/tl_testbench/uut/DP/Grb
+add wave -position end  sim:/tl_testbench/uut/DP/Grc
+add wave -position end  sim:/tl_testbench/uut/DP/Rin
+add wave -position end  sim:/tl_testbench/uut/DP/Rout
+add wave -position end  sim:/tl_testbench/uut/DP/BAout
+add wave -position end  sim:/tl_testbench/uut/DP/RAM_wr
+add wave -position end  sim:/tl_testbench/uut/DP/DPin
+add wave -position end  sim:/tl_testbench/uut/DP/DPout
+add wave -position end  sim:/tl_testbench/uut/DP/ALUopp
+add wave -position end  sim:/tl_testbench/uut/DP/GR/RF/reg_array
+add wave -position end  sim:/tl_testbench/uut/DP/PC/q
+add wave -position end  sim:/tl_testbench/uut/DP/IR/q
+add wave -position end  sim:/tl_testbench/uut/DP/Y/q
+add wave -position end  sim:/tl_testbench/uut/DP/MAR/q
+add wave -position end  sim:/tl_testbench/uut/DP/MDR/q
+add wave -position end  sim:/tl_testbench/uut/DP/HI/q
+add wave -position end  sim:/tl_testbench/uut/DP/LO/q
+add wave -position end  sim:/tl_testbench/uut/DP/Z/q
+add wave -position end  sim:/tl_testbench/uut/DP/DP_ram/memory_array
 
-add wave -position insertpoint  \
-sim:/tl_testbench/clk \
-sim:/tl_testbench/reset \
-sim:/tl_testbench/stop \
-sim:/tl_testbench/run
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/clr
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/CONin \
-sim:/tl_testbench/uut/CON
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/RAM_wr \
-sim:/tl_testbench/uut/IRop \
-sim:/tl_testbench/uut/Gra \
-sim:/tl_testbench/uut/Grb \
-sim:/tl_testbench/uut/Grc \
-sim:/tl_testbench/uut/Rin \
-sim:/tl_testbench/uut/Rout \
-sim:/tl_testbench/uut/BAout \
-sim:/tl_testbench/uut/DPin \
-sim:/tl_testbench/uut/DPout \
-sim:/tl_testbench/uut/ALUopp
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/ctrl/ps \
-sim:/tl_testbench/uut/ctrl/ns
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/DP/GR/RF/reg_array
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/DP/PC/q
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/DP/IR/q
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/DP/Y/q
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/DP/MAR/q
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/DP/MDR/q
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/DP/HI/q
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/DP/LO/q
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/DP/Z/q
-add wave -position insertpoint  \
-sim:/tl_testbench/uut/DP/DP_ram/memory_array
+run -all
