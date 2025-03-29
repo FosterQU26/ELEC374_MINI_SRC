@@ -129,7 +129,7 @@ module DataPath (
 	register Y			(clr, clk, DPin[`Y], BusMuxOut, YtoA);
 	register MAR		(clr, clk, DPin[`MAR], BusMuxOut, MARout);
 	register MDR		(clr, clk, DPin[`MDR], MDRin, BusMuxInMDR);		
-	register INPORT	(clr, clk, DPin[`INPORT], INPORTin, BusMuxInINPORT);
+	register INPORT	(clr, clk, 1, INPORTin, BusMuxInINPORT);
 	register OUTPORT	(clr, clk, DPin[`OUTPORT], BusMuxOut, OUTPORTout);
 	register HI			(clr, clk, DPin[`HI], BusMuxOut, BusMuxInHI);
 	register LO			(clr, clk, DPin[`LO], BusMuxOut, BusMuxInLO);
