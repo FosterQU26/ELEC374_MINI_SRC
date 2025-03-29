@@ -22,7 +22,7 @@ module ram #(
 	
 
 	// DESIGN LIMITATION: an absolute path is required to read the contents of ram.txt, which needs to be changed based on the device.
-	initial $readmemh("C:/Users/21fje/Desktop/ELEC374_MINI_SRC/ram.txt", memory_array);
+	initial $readmemh("C:/Users/foste/Documents/3rd_Year_24-25/ELEC374/ELEC374_MINI_SRC/ram.txt", memory_array);
 	
 	// r_data is immediately available as r_addr is presented to the RF (asynchronous)
 	assign r_data = memory_array[r_addr];
