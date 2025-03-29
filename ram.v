@@ -32,5 +32,6 @@ module ram #(
 		if (wr_en) memory_array[w_addr] <= w_data; 
 	end
 	
+	//Testing
 	
 endmodule
