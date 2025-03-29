@@ -36,8 +36,3 @@ simulation/
 # Ignore any other files not essential for source tracking
 *.qpf.lock
 *.qsf.lock
-
-# Ignore ram.v it has a ABS path
-ram.v
-
-ram.v
