@@ -9,7 +9,7 @@ module hex_to_7 (
 );
 	
 	// in to out maps.
-	always begin
+	always  @(*) begin
 		case (in)
 			4'b0000: out = 7'b1000000;
 			4'b0001: out = 7'b1111001;

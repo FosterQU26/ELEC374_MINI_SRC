@@ -12,18 +12,14 @@ module mini_src_group_1 (
 	wire [31:0] INPORTin = {24'b0, SW};
 	wire [31:0] OUTPORTout;
 	wire [31:27] IRop;
-	
-	//TODO: Sanitize yo self
-	
-	//input_sanitizer sanitized_reset (CLOCK_50, 1'b0, ~KEY[0], reset);
-   //input_sanitizer sanitized_stop (CLOCK_50, 1'b0, ~KEY[1], stop);
-	assign reset = ~KEY[0];
-	assign stop = ~KEY[1];
-	
-	//TODO: Hex yo Shit
-	
-	//hex_to_7 out3_0 (OUTPORTout[3:0], HEX0);
-	//hex_to_7 out7_4 (OUTPORTout[7:4], HEX1);
+
+	//Sanitize Inputs
+	input_sanitizer sanitized_reset (CLOCK_50, 1'b0, ~KEY[0], reset);
+   input_sanitizer sanitized_stop (CLOCK_50, 1'b0, ~KEY[1], stop);
+
+	//Hex Modules
+	hex_to_7 out3_0 (OUTPORTout[3:0], HEX0);
+	hex_to_7 out7_4 (OUTPORTout[7:4], HEX1);
 	
 	// General Purpose Register Control
 	wire Gra, Grb, Grc, Rin, Rout, BAout;
@@ -37,6 +33,8 @@ module mini_src_group_1 (
 	DataPath DP (CLOCK_50, clr, CONin, Gra, Grb, Grc, Rin, Rout, BAout, RAM_wr, DPin, DPout, ALUopp, INPORTin, OUTPORTout, IRop, CON);
 
 	Control ctrl (reset, stop, CLOCK_50, CON, IRop, clr, CONin, RAM_wr, Gra, Grb, Grc, Rin, Rout, BAout, DPin, DPout, ALUopp, LEDR[5]);
+	
+	assign LEDR[4:0] = 5'b11111;
 	
 endmodule
 
@@ -57,8 +55,12 @@ module tl_testbench();
 	end
 	
 	initial begin
-		SW <= 8'h80;
+		SW <= 8'hC0;
 		KEY[1] <= 1;
+		KEY[0] <= 1;
+		
+		repeat(10) @(posedge CLOCK_50);
+		
 		KEY[0] <= 0;
 		
 		repeat(10) @(posedge CLOCK_50);

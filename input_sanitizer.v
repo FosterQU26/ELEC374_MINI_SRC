@@ -10,12 +10,17 @@ module input_sanitizer (
 	output out
 );
 	
-	
 	// There are two states: OFF (0) and ON (1)
 	reg ps, ns;
 	
+	//Initilize States
+	initial begin
+		ps = 1'b0;
+		ns = 1'b0;
+	end
+	
 	// Next state logic (see state diagram in report)
-	always begin
+	always @(*) begin
 		case (ps)
 			1'b0:	if (in) ns = 1'b1;
 				else ns = 1'b0;
