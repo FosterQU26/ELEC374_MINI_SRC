@@ -25,14 +25,7 @@ module reg_file #(
 	
 	// Internal memory array consisting of 2^depth, width-lengthed registers.
 	// This definition enforces a right-to-left increasing bit significance, and an up-to-down addressing scheme.
-	reg [width-1:0] reg_array [0:2**depth-1];
-	
-	// Default all contents to 0.
-	initial begin 
-		for (i=0; i<2**depth; i = i+1) begin
-				reg_array[i] = 32'b0;
-		end
-	end 
+	reg [width-1:0] reg_array [0:2**depth-1]; 
 	
 	// r_data is immediately available as r_addr is presented to the RF (asynchronous read)
 	assign r_data = reg_array[r_addr];
@@ -45,7 +38,7 @@ module reg_file #(
 			end
 		end
 		
-		else if (wr_en) begin
+	 if (wr_en) begin
 			reg_array[w_addr] = w_data;
 		end
 		
