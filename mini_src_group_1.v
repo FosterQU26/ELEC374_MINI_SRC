@@ -4,7 +4,7 @@ module mini_src_group_1 (
 	input [1:0] KEY,
 	input [7:0] SW,
 	output [6:0] HEX0, HEX1,
-	output [5:0] LEDR
+	output LEDR5
 	);
 	
 	// Program Execution Control
@@ -32,9 +32,7 @@ module mini_src_group_1 (
 	
 	DataPath DP (CLOCK_50, clr, CONin, Gra, Grb, Grc, Rin, Rout, BAout, RAM_wr, DPin, DPout, ALUopp, INPORTin, OUTPORTout, IRop, CON);
 
-	Control ctrl (reset, stop, CLOCK_50, CON, IRop, clr, CONin, RAM_wr, Gra, Grb, Grc, Rin, Rout, BAout, DPin, DPout, ALUopp, LEDR[5]);
-	
-	assign LEDR[4:0] = 5'b11111;
+	Control ctrl (reset, stop, CLOCK_50, CON, IRop, clr, CONin, RAM_wr, Gra, Grb, Grc, Rin, Rout, BAout, DPin, DPout, ALUopp, LEDR5);
 	
 endmodule
 
